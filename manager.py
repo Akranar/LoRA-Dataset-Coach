@@ -1940,8 +1940,9 @@ class App:
         cap_frame = Frame(frame, bg=CARD, padx=10, pady=6)
         cap_frame.pack(fill="x", pady=4)
         Label(cap_frame, text="🏷 Captions :", font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
-        self.captioner_mode = StringVar(value="wd14")
+        self.captioner_mode = StringVar(value="none")
         for val, lbl, tip in (
+            ("none",       "None (analysis only)", "No captioning - fastest, nothing written to disk"),
             ("wd14",       "WD14 tags",       "Tags booru SDXL/Kohya (~30 s, 330 Mo)"),
             ("natural",    "Florence-2",      "Caption naturelle, rapide mais hallucine sur personnes"),
             ("joycaption", "JoyCaption ⭐",   "Captions longues : FLUX.2/Qwen-Image/Z-Image/Wan/LTX-2 (lent, 4-8 Go)"),
@@ -1952,6 +1953,25 @@ class App:
                             activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=6)
         Label(cap_frame, text="(WD14 pour SDXL/Pony · JoyCaption pour tous les modèles 2025-26)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=8)
+
+        # ===== Options caption / artefacts (ligne separee) =====
+        cap_opts_frame = Frame(frame, bg=CARD, padx=10, pady=6)
+        cap_opts_frame.pack(fill="x", pady=4)
+        self.write_captions_var = tk.BooleanVar(value=False)
+        self.overwrite_captions_var = tk.BooleanVar(value=False)
+        self.detect_artifacts_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(cap_opts_frame, text="Write caption files",
+                        variable=self.write_captions_var,
+                        font=FONT_BODY, fg=TEXT, bg=CARD, selectcolor=BG2,
+                        activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=6)
+        tk.Checkbutton(cap_opts_frame, text="Overwrite existing captions",
+                        variable=self.overwrite_captions_var,
+                        font=FONT_BODY, fg=TEXT, bg=CARD, selectcolor=BG2,
+                        activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=6)
+        tk.Checkbutton(cap_opts_frame, text="Detect anatomical artifacts (WD14, no files written)",
+                        variable=self.detect_artifacts_var,
+                        font=FONT_BODY, fg=TEXT, bg=CARD, selectcolor=BG2,
+                        activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=6)
 
         # Barre de progression + ligne phase + ETA
         progress_outer = Frame(frame, bg=BG)
@@ -2128,7 +2148,10 @@ class App:
         self._update_preview_ref(ref)
 
         import time as _time
-        cap_mode = self.captioner_mode.get() if hasattr(self, "captioner_mode") else "wd14"
+        cap_mode = self.captioner_mode.get() if hasattr(self, "captioner_mode") else "none"
+        write_caps = self.write_captions_var.get() if hasattr(self, "write_captions_var") else False
+        overwrite_caps = self.overwrite_captions_var.get() if hasattr(self, "overwrite_captions_var") else False
+        detect_artifacts = self.detect_artifacts_var.get() if hasattr(self, "detect_artifacts_var") else True
 
         # Compte les images pour informer l'utilisateur en amont
         exts = (".png", ".jpg", ".jpeg", ".webp")
@@ -2179,7 +2202,9 @@ class App:
 
         dev = self.cfg.get("device", "auto")
         threading.Thread(target=self._analyze_subprocess,
-                          args=(folder, ref, cap_mode, dev), daemon=True).start()
+                          args=(folder, ref, cap_mode, dev,
+                                write_caps, overwrite_caps, detect_artifacts),
+                          daemon=True).start()
 
     def _analyzer_tick(self):
         """Tick chaque seconde : affiche le temps écoulé tant que l'analyse tourne
@@ -2209,15 +2234,21 @@ class App:
         # Reprogramme
         self.root.after(1000, self._analyzer_tick)
 
-    def _analyze_subprocess(self, folder, ref="", cap_mode="wd14", device="auto"):
+    def _analyze_subprocess(self, folder, ref="", cap_mode="none", device="auto",
+                             write_captions=False, overwrite_captions=False,
+                             detect_artifacts=True):
         import time as _time
         script = str(Path(__file__).parent / "analyze_dataset.py")
         try:
             cmd = [self.comfyui_py, script, folder, "full"]
             # argv: folder(1) full(2) ref(3) cap(4) device(5)
+            #       write_captions(6) overwrite_captions(7) detect_artifacts(8)
             cmd.append(ref if ref else "")
             cmd.append(cap_mode)
             cmd.append(device)
+            cmd.append("1" if write_captions else "0")
+            cmd.append("1" if overwrite_captions else "0")
+            cmd.append("1" if detect_artifacts else "0")
             proc = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,

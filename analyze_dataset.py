@@ -107,11 +107,16 @@ def _grade_from_score(s):
     return "F"
 
 
-def _compute_target_scores(results, viable_imgs, summary, n_viable):
+def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_enabled=True):
     """Note specifique pour chaque famille de target.
     Pas une note par target individuel, mais regroupe en 7 familles :
     SDXL classique, SDXL anime, FLUX.1, Image 2025-26 (encodeur LLM),
     Wan 2.2, Video 2025-26, Video legacy.
+
+    captioning_enabled : si False (captioner_mode == "none"), le critere
+    "captions" de chaque famille est retire du calcul et les points restants
+    sont renormalises sur 100 - aucune mention/raison liee aux captions n'est
+    ajoutee dans ce cas.
     """
     if not viable_imgs:
         return {}
@@ -156,10 +161,11 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 15
     elif res_512_count / max(n_viable, 1) >= 0.9: s += 10
     else: s += 5; reasons.append("resolution sub-optimale")
-    # Captions WD14 (sur 15)
-    if has_wd14 / max(n_viable, 1) >= 0.95: s += 15
-    elif has_wd14 / max(n_viable, 1) >= 0.7: s += 10
-    else: s += 3; reasons.append("captions WD14 manquantes")
+    # Captions WD14 (sur 15) - ignore si captioning desactive
+    if captioning_enabled:
+        if has_wd14 / max(n_viable, 1) >= 0.95: s += 15
+        elif has_wd14 / max(n_viable, 1) >= 0.7: s += 10
+        else: s += 3; reasons.append("captions WD14 manquantes")
     # Diversite (sur 20)
     s += int(diversity_score * 0.20)
     # AR square dominant (sur 10)
@@ -168,6 +174,9 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     # Pas d'artefacts severes (sur 10)
     if art_high == 0: s += 10
     else: s += max(0, 10 - 2 * art_high); reasons.append(f"{art_high} artefacts")
+
+    if not captioning_enabled:
+        s = s * 100 / 85  # renormalise sans le critere captions (15 pts sur 100)
 
     scores["SDXL classique"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
@@ -197,11 +206,12 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     if res_1024_count / max(n_viable, 1) >= 0.9: s += 20
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 15
     else: s += 5; reasons.append("res < 1024 sous-optimal pour Flux")
-    # Captions naturelles (preferences JoyCaption) (sur 20)
-    if has_joy / max(n_viable, 1) >= 0.9: s += 20
-    elif has_natural / max(n_viable, 1) >= 0.9: s += 15  # Florence-2 ok mais sous-optimal
-    elif has_wd14 / max(n_viable, 1) >= 0.9: s += 7; reasons.append("captions WD14 seulement, JoyCaption recommande")
-    else: s += 3; reasons.append("captions manquantes")
+    # Captions naturelles (preferences JoyCaption) (sur 20) - ignore si captioning desactive
+    if captioning_enabled:
+        if has_joy / max(n_viable, 1) >= 0.9: s += 20
+        elif has_natural / max(n_viable, 1) >= 0.9: s += 15  # Florence-2 ok mais sous-optimal
+        elif has_wd14 / max(n_viable, 1) >= 0.9: s += 7; reasons.append("captions WD14 seulement, JoyCaption recommande")
+        else: s += 3; reasons.append("captions manquantes")
     # Diversite AR (Flux benefice du multi-bucket) (sur 15)
     if ar_variety >= 3: s += 15
     elif ar_variety == 2: s += 10
@@ -210,6 +220,9 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     s += int(diversity_score * 0.15)
     # Pas d'artefacts severes (sur 5)
     if art_high == 0: s += 5
+
+    if not captioning_enabled:
+        s = s * 100 / 80  # renormalise sans le critere captions (20 pts sur 100)
 
     scores["FLUX.1"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
@@ -231,13 +244,14 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     if res_1024_count / max(n_viable, 1) >= 0.9: s += 20
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 12
     else: s += 3; reasons.append("res < 1024 : upscale avant (modeles 1 MP+)")
-    # Captions naturelles LONGUES (sur 30)
-    long_caps_llm = sum(1 for r in viable_imgs
-                        if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
-    if long_caps_llm / max(n_viable, 1) >= 0.8: s += 30
-    elif has_natural / max(n_viable, 1) >= 0.8: s += 18; reasons.append("captions trop courtes pour un encodeur LLM")
-    elif has_wd14 / max(n_viable, 1) >= 0.8: s += 4; reasons.append("tags WD14 = inadaptés (encodeur LLM), JoyCaption requis")
-    else: s += 0; reasons.append("captions manquantes")
+    # Captions naturelles LONGUES (sur 30) - ignore si captioning desactive
+    if captioning_enabled:
+        long_caps_llm = sum(1 for r in viable_imgs
+                            if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
+        if long_caps_llm / max(n_viable, 1) >= 0.8: s += 30
+        elif has_natural / max(n_viable, 1) >= 0.8: s += 18; reasons.append("captions trop courtes pour un encodeur LLM")
+        elif has_wd14 / max(n_viable, 1) >= 0.8: s += 4; reasons.append("tags WD14 = inadaptés (encodeur LLM), JoyCaption requis")
+        else: s += 0; reasons.append("captions manquantes")
     # Diversite AR (sur 10)
     s += {3: 10, 2: 7}.get(ar_variety, 3)
     # Diversite globale (sur 15)
@@ -245,6 +259,9 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     # Artefacts (sur 5)
     if art_high == 0: s += 5
     else: reasons.append(f"{art_high} artefacts")
+
+    if not captioning_enabled:
+        s = s * 100 / 70  # renormalise sans le critere captions (30 pts sur 100)
 
     scores["Image 2025-26 (FLUX.2 / Qwen-Image / Z-Image)"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
@@ -265,12 +282,14 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     if res_512_count / max(n_viable, 1) >= 0.9: s += 15
     else: s += 5
     # Captions naturelles longues (sur 20) - Wan T5 adore les phrases longues
-    long_caps = sum(1 for r in viable_imgs
-                     if (r.get("joycaption") or r.get("natural_caption") or "")
-                     and len((r.get("joycaption") or r.get("natural_caption"))) >= 100)
-    if long_caps / max(n_viable, 1) >= 0.7: s += 20
-    elif has_natural / max(n_viable, 1) >= 0.7: s += 12
-    elif has_wd14 / max(n_viable, 1) >= 0.7: s += 4; reasons.append("WD14 trop court pour Wan, JoyCaption recommande")
+    # (ignore si captioning desactive)
+    if captioning_enabled:
+        long_caps = sum(1 for r in viable_imgs
+                         if (r.get("joycaption") or r.get("natural_caption") or "")
+                         and len((r.get("joycaption") or r.get("natural_caption"))) >= 100)
+        if long_caps / max(n_viable, 1) >= 0.7: s += 20
+        elif has_natural / max(n_viable, 1) >= 0.7: s += 12
+        elif has_wd14 / max(n_viable, 1) >= 0.7: s += 4; reasons.append("WD14 trop court pour Wan, JoyCaption recommande")
     # Diversite AR (Wan multi-bucket vidéo) (sur 15)
     if ar_variety >= 2: s += 15
     elif ar_variety == 1: s += 8
@@ -279,6 +298,9 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     elif po >= 1 or la >= 1: s += 5
     # Diversite globale (sur 15)
     s += int(diversity_score * 0.15)
+
+    if not captioning_enabled:
+        s = s * 100 / 80  # renormalise sans le critere captions (20 pts sur 100)
 
     wan_score = min(100, s)
     wan_reasons = reasons + ["photos seules : apparence apprise, pas le mouvement"]
@@ -300,11 +322,13 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     if res_1024_count / max(n_viable, 1) >= 0.7: s += 15
     elif res_512_count / max(n_viable, 1) >= 0.9: s += 10
     else: s += 3; reasons.append("resolution faible")
-    long_caps_v = sum(1 for r in viable_imgs
-                      if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
-    if long_caps_v / max(n_viable, 1) >= 0.8: s += 25
-    elif has_natural / max(n_viable, 1) >= 0.8: s += 14; reasons.append("captions trop courtes (encodeur VLM)")
-    else: s += 2; reasons.append("captions naturelles détaillées requises")
+    # Captions naturelles longues (sur 25) - ignore si captioning desactive
+    if captioning_enabled:
+        long_caps_v = sum(1 for r in viable_imgs
+                          if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
+        if long_caps_v / max(n_viable, 1) >= 0.8: s += 25
+        elif has_natural / max(n_viable, 1) >= 0.8: s += 14; reasons.append("captions trop courtes (encodeur VLM)")
+        else: s += 2; reasons.append("captions naturelles détaillées requises")
     if po >= 3 and la >= 3: s += 15
     elif po >= 1 and la >= 1: s += 8
     else: s += 2; reasons.append("aucun cadrage 16:9/9:16")
@@ -312,6 +336,8 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable):
     if art_high == 0: s += 10
     else: reasons.append(f"{art_high} artefacts")
     reasons.append("photos seules : apparence apprise, pas le mouvement")
+    if not captioning_enabled:
+        s = s * 100 / 75  # renormalise sans le critere captions (25 pts sur 100)
     s = min(100, s)
     scores["Vidéo 2025-26 (HunyuanVideo 1.5 / LTX-2 / MiniMax-H3)"] = {
         "score": s, "grade": _grade_from_score(s),
@@ -391,21 +417,36 @@ def save_cache(folder, cache_dict):
         print(f"STEP Echec ecriture cache : {e}", file=sys.stderr, flush=True)
 
 
-def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
-             ai_detection=True, device="auto"):
+def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
+             ai_detection=True, device="auto", write_captions=False,
+             overwrite_captions=False, wd14_for_artifacts=True):
     """
     captioner_mode :
+      - "none"       : no captioning at all (default) - analysis only
       - "wd14"       : tags booru (SDXL/SD1.5/Kohya) - rapide, ONNX
       - "natural"    : Florence-2 caption naturelle (deprecie en 2026 - hallucine sur personnes)
       - "joycaption" : JoyCaption Beta One - STANDARD 2026 pour LoRA persona
       - "both"       : WD14 + Florence-2 (compat retrocompat)
       - "all"        : WD14 + Florence-2 + JoyCaption (le plus complet)
 
+    write_captions : si True, les captions generees sont ecrites a cote des
+      images (.txt / .nat.txt / .joy.txt). Par defaut False : rien n'est
+      jamais ecrit sur le disque, meme si captioner_mode != "none".
+    overwrite_captions : si True, un fichier caption deja present est
+      remplace. Par defaut False : les fichiers existants ne sont jamais
+      touches (write_captions se contente alors des images qui n'ont pas
+      encore de caption).
+    wd14_for_artifacts : si True (par defaut) et que ai_detection est actif,
+      WD14 tourne en memoire (sans rien ecrire) meme si captioner_mode
+      n'inclut pas "wd14", uniquement pour alimenter la detection
+      d'artefacts anatomiques (artifact_detector_local).
+
     ai_detection : si True, ajoute la detection IA + artefacts + metadata
       - sdxl-detector (Organika/sdxl-detector, ViT 350 Mo)
       - WD14 tags -> artefacts anatomiques
       - C2PA/IPTC/EXIF metadata
     """
+    captioning_enabled = captioner_mode != "none"
     # Si l'utilisateur force le CPU, on masque le GPU pour TOUT (torch + onnx +
     # tous les captioners) avant le moindre import lourd.
     if device == "cpu":
@@ -576,9 +617,13 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
         clip_model = None
 
     # ===== Init WD14 tagger (pour captions Kohya / SDXL) =====
+    # Charge aussi si on ne veut QUE la detection d'artefacts anatomiques
+    # (wd14_for_artifacts) : WD14 tourne alors en memoire, sans ecrire de
+    # caption (voir write_captions plus bas).
     sys.path.insert(0, str(Path(__file__).parent))
     wd14 = None
-    if captioner_mode in ("wd14", "both"):
+    need_wd14 = captioner_mode in ("wd14", "both", "all") or (ai_detection and wd14_for_artifacts)
+    if need_wd14:
         try:
             print("STEP Chargement WD14 tagger (tags booru)...", file=sys.stderr, flush=True)
             from wd14_local import WD14Tagger
@@ -655,6 +700,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
     embeddings = []
     body_embeddings = []  # Embeddings CLIP du corps (sous le visage)
     phashes = []  # Perceptual hashes pour duplicates detection
+    n_caption_files_written = 0  # compte les .txt/.nat.txt/.joy.txt REELLEMENT ecrits
     total = len(images)
 
     # ===== Charge le cache d'analyse =====
@@ -917,14 +963,19 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
                 body_embeddings.append(None)
 
             # ===== WD14 captioning (tags booru) =====
+            # wd14 peut tourner uniquement pour l'artefact-detection
+            # (wd14_for_artifacts) : dans ce cas on NE caption PAS (pas de
+            # .txt ecrit) sauf si l'utilisateur a explicitement demande des
+            # captions WD14 via captioner_mode.
             if wd14 is not None:
                 try:
                     with redirect_stdout_to_stderr():
                         tags = wd14.tag(pil_img)
                     entry["wd14_tags"] = tags
-                    # Ecrit le .txt a cote (format Kohya)
-                    caption_path = img_path.with_suffix(".txt")
-                    caption_path.write_text(tags, encoding="utf-8")
+                    if captioner_mode in ("wd14", "both", "all"):
+                        caption_path = img_path.with_suffix(".txt")
+                        caption_path.write_text(tags, encoding="utf-8")
+                        n_caption_files_written += 1
                 except Exception as e:
                     entry["wd14_error"] = str(e)[:80]
 
@@ -1358,7 +1409,10 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
     n_border = sum(1 for r in results if r.get("lora_viable") == "borderline")
     n_unusable = sum(1 for r in results if r.get("lora_viable") == "no")
     n_duplicates = sum(1 for r in results if r.get("duplicate_of"))
-    n_captioned = sum(1 for r in results if r.get("wd14_tags"))
+    # Nombre de fichiers caption REELLEMENT ecrits sur le disque cette run
+    # (pas juste le nombre de tags WD14 calcules en memoire pour les
+    # artefacts : wd14_for_artifacts peut remplir wd14_tags sans rien ecrire)
+    n_captioned = n_caption_files_written
     # === Stats IA / artefacts ===
     n_ai_classifier = sum(1 for r in results if r.get("is_ai_classifier"))
     n_ai_metadata = sum(1 for r in results if r.get("ai_metadata_sources"))
@@ -1716,7 +1770,8 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="wd14",
                 next_to_generate.append(f"Peu de variete d'expressions ({len(expr_dist)} types) — vise au moins 4 expressions differentes")
 
     # ===== SCORES PAR TARGET (suggestion automatique du meilleur target) =====
-    target_scores = _compute_target_scores(results, viable_imgs, summary, n_viable)
+    target_scores = _compute_target_scores(results, viable_imgs, summary, n_viable,
+                                            captioning_enabled=captioning_enabled)
     summary["target_scores"] = target_scores
     # Tri par score decroissant pour suggerer le meilleur
     if target_scores:
@@ -1995,7 +2050,12 @@ if __name__ == "__main__":
     folder = sys.argv[1]
     mode = sys.argv[2] if len(sys.argv) > 2 else "full"
     ref = sys.argv[3] if len(sys.argv) > 3 else None
-    cap = sys.argv[4] if len(sys.argv) > 4 else "wd14"  # wd14 / natural / both / joycaption / all
+    cap = sys.argv[4] if len(sys.argv) > 4 else "none"  # none / wd14 / natural / both / joycaption / all
     dev = sys.argv[5] if len(sys.argv) > 5 else "auto"  # auto / cuda / cpu
-    result = analyze(folder, mode, ref_image=ref, captioner_mode=cap, device=dev)
+    write_caps = (sys.argv[6] if len(sys.argv) > 6 else "0") in ("1", "true", "True")
+    overwrite_caps = (sys.argv[7] if len(sys.argv) > 7 else "0") in ("1", "true", "True")
+    detect_art = (sys.argv[8] if len(sys.argv) > 8 else "1") in ("1", "true", "True")
+    result = analyze(folder, mode, ref_image=ref, captioner_mode=cap, device=dev,
+                      write_captions=write_caps, overwrite_captions=overwrite_caps,
+                      wd14_for_artifacts=detect_art)
     print(json.dumps(result, ensure_ascii=False, indent=2, cls=NpEncoder))

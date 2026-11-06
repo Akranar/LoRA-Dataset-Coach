@@ -480,26 +480,14 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
           f"(onnx: {', '.join(p.replace('ExecutionProvider','') for p in onnx_providers)})",
           file=sys.stderr, flush=True)
 
-    # Init insightface (utilise antelopev2 deja installe pour InstantID)
-    # On cherche le dossier dans plusieurs emplacements possibles
-    insight_roots = [
-        r"C:\AI\ComfyUI-future\ComfyUI_windows_portable\ComfyUI\models\insightface",
-        r"C:\AI\ComfyUI-Zluda\models\insightface",
-        os.path.expanduser(r"~\.insightface"),
-    ]
-    insight_root = None
-    for candidate in insight_roots:
-        if os.path.isdir(os.path.join(candidate, "models", "antelopev2")):
-            insight_root = candidate
-            break
+    # Init insightface (utilise antelopev2 - voir ldc_config pour la resolution
+    # du chemin : env var LDC_INSIGHTFACE_ROOT -> config.json -> ~/.insightface)
+    sys.path.insert(0, str(Path(__file__).parent))
+    from ldc_config import find_insightface_root, not_found_message
+    insight_root, _insight_tried = find_insightface_root()
 
     if insight_root is None:
-        return {
-            "error": "Modeles antelopev2 introuvables. Cherche dans :\n" +
-                     "\n".join(f"  - {p}\\models\\antelopev2" for p in insight_roots) +
-                     "\nLance d'abord InstantID dans ComfyUI pour les telecharger, "
-                     "ou copie les .onnx manuellement."
-        }
+        return {"error": not_found_message("insightface antelopev2", _insight_tried)}
 
     print(f"STEP Chargement du modèle de détection de visage (insightface antelopev2, {torch_device.upper()})...",
           file=sys.stderr, flush=True)

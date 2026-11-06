@@ -61,42 +61,14 @@ FONT_EMOJI  = ("Segoe UI Emoji", 18)
 # ============================================================
 # Config
 # ============================================================
-CONFIG_FILE = Path(__file__).parent / "config.json"
-
-DEFAULT_CONFIG = {
-    # Path to the ComfyUI python_embeded.exe that has insightface + torch CUDA
-    "comfyui_python": COMFYUI_FUTURE_PY,
-    # Default folder pre-filled in the analyzer
-    "datasets_dir": "C:\\AI\\datasets",
-    # Compute device: "auto" (GPU si dispo) | "cuda" | "cpu"
-    "device": "auto",
-    # ComfyUI local (evaluateur : generation automatique du jeu de test)
-    "comfyui_url": "http://127.0.0.1:8188",
-    "comfyui_eval_workflow": "",
-    # Createur de LoRA (entrainement) + envoi des checkpoints a ComfyUI
-    "aitoolkit_dir": r"C:\AI\ai-toolkit",
-    "aitoolkit_python": r"C:\AI\ai-toolkit\venv\Scripts\python.exe",
-    "comfyui_loras_dir": r"C:\AI\ComfyUI-future\ComfyUI_windows_portable\ComfyUI\models\loras",
-}
-
-
-
-def load_config():
-    if CONFIG_FILE.exists():
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-            for k, v in DEFAULT_CONFIG.items():
-                cfg.setdefault(k, v)
-            return cfg
-        except Exception:
-            pass
-    return dict(DEFAULT_CONFIG)
-
-
-def save_config(cfg):
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2)
+# Config storage + model-path resolution now lives in ldc_config.py (shared
+# with the CLI scripts: analyze_dataset.py, lora_evaluator.py, wd14_local.py,
+# mask_generator_local.py) so the GUI and the subprocesses agree on one
+# config.json and one path-resolution policy (env var -> config.json ->
+# default). Re-exported here under the same names so every existing call
+# site in this file keeps working unchanged.
+sys.path.insert(0, str(Path(__file__).parent))
+from ldc_config import CONFIG_FILE, DEFAULT_CONFIG, load_config, save_config
 
 
 
@@ -1599,6 +1571,8 @@ class App:
                                 "python.exe de ComfyUI (a insightface + torch CUDA)", "file"),
             "datasets_dir":   ("📂", "Dossier datasets par défaut",
                                 "Pré-rempli dans l'analyseur", "dir"),
+            "insightface_root": ("🧩", "Insightface models folder (antelopev2)",
+                                "Leave empty to auto-detect (env var LDC_INSIGHTFACE_ROOT or ~/.insightface)", "dir"),
         }
         for key, (icon, label, desc, picker) in labels.items():
             card = Frame(frame, bg=CARD, padx=14, pady=12)

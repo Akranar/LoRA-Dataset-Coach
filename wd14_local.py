@@ -16,26 +16,23 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
-# Dossiers possibles ou trouver le modele WD14
-WD14_MODEL_DIRS = [
-    r"C:\AI\ComfyUI-future\ComfyUI_windows_portable\ComfyUI\custom_nodes\ComfyUI-WD14-Tagger\models",
-    r"C:\AI\ComfyUI-Zluda\custom_nodes\ComfyUI-WD14-Tagger\models",
-]
+sys.path.insert(0, str(Path(__file__).parent))
+from ldc_config import find_wd14_model_dir, default_wd14_download_dir
 
 DEFAULT_MODEL = "wd-v1-4-moat-tagger-v2"
 HF_REPO = f"SmilingWolf/{DEFAULT_MODEL}"
 
 
 def _ensure_model_downloaded(model_name=DEFAULT_MODEL):
-    """Cherche les fichiers .onnx + .csv dans les dossiers connus, telecharge si absent."""
-    for d in WD14_MODEL_DIRS:
-        onnx = Path(d) / f"{model_name}.onnx"
-        csv_path = Path(d) / f"{model_name}.csv"
-        if onnx.is_file() and csv_path.is_file():
-            return str(onnx), str(csv_path)
+    """Cherche les fichiers .onnx + .csv (env var / config.json / cache par
+    defaut - voir ldc_config), telecharge si absent."""
+    found_dir, _tried = find_wd14_model_dir(model_name)
+    if found_dir:
+        return (str(Path(found_dir) / f"{model_name}.onnx"),
+                str(Path(found_dir) / f"{model_name}.csv"))
 
-    # Pas trouve : telechargement dans le 1er dossier
-    target_dir = Path(WD14_MODEL_DIRS[0])
+    # Pas trouve : telechargement dans le dossier de cache par defaut
+    target_dir = Path(default_wd14_download_dir())
     target_dir.mkdir(parents=True, exist_ok=True)
     onnx = target_dir / f"{model_name}.onnx"
     csv_path = target_dir / f"{model_name}.csv"

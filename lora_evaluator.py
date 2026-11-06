@@ -73,19 +73,13 @@ def evaluate_lora(generated_folder, reference_folder,
     except ImportError as e:
         return {"error": f"Missing module: {e}"}
 
-    # Init insightface
-    insight_roots = [
-        r"C:\AI\ComfyUI-future\ComfyUI_windows_portable\ComfyUI\models\insightface",
-        r"C:\AI\ComfyUI-Zluda\models\insightface",
-        os.path.expanduser(r"~\.insightface"),
-    ]
-    insight_root = next(
-        (p for p in insight_roots
-         if os.path.isdir(os.path.join(p, "models", "antelopev2"))),
-        None,
-    )
+    # Init insightface - see ldc_config for the path resolution order
+    # (env var LDC_INSIGHTFACE_ROOT -> config.json -> ~/.insightface)
+    sys.path.insert(0, str(Path(__file__).parent))
+    from ldc_config import find_insightface_root, not_found_message
+    insight_root, insight_tried = find_insightface_root()
     if insight_root is None:
-        return {"error": "antelopev2 models not found"}
+        return {"error": not_found_message("insightface antelopev2", insight_tried)}
 
     print("STEP Loading insightface...", file=sys.stderr, flush=True)
     import contextlib

@@ -14,24 +14,22 @@ import torch.nn.functional as F
 from PIL import Image
 from torchvision.transforms.functional import normalize
 
-
-# Emplacements possibles du module briarmbg.py
-BRIA_NODE_DIRS = [
-    r"C:\AI\ComfyUI-future\ComfyUI_windows_portable\ComfyUI\custom_nodes\ComfyUI-BRIA_AI-RMBG",
-    r"C:\AI\ComfyUI-Zluda\custom_nodes\ComfyUI-BRIA_AI-RMBG",
-]
+sys.path.insert(0, str(Path(__file__).parent))
+from ldc_config import find_rmbg_model_dir, not_found_message
 
 
 def _ensure_briarmbg_importable():
-    """Ajoute le dossier custom_node au sys.path pour importer briarmbg.BriaRMBG."""
-    for d in BRIA_NODE_DIRS:
-        if Path(d).is_dir() and (Path(d) / "briarmbg.py").is_file():
-            if d not in sys.path:
-                sys.path.insert(0, d)
-            return d
-    raise RuntimeError(
-        "briarmbg.py introuvable. Installe ComfyUI-BRIA_AI-RMBG dans custom_nodes/"
-    )
+    """Ajoute le dossier custom_node au sys.path pour importer briarmbg.BriaRMBG.
+    Cherche via env var LDC_RMBG_MODEL_DIR / config.json (voir ldc_config) -
+    briarmbg.py est un module Python (pas juste des poids), donc il n'y a pas
+    de telechargement automatique possible : il faut pointer vers une
+    installation existante de ComfyUI-BRIA_AI-RMBG."""
+    node_dir, tried = find_rmbg_model_dir()
+    if node_dir is None:
+        raise RuntimeError(not_found_message("ComfyUI-BRIA_AI-RMBG (briarmbg.py)", tried))
+    if node_dir not in sys.path:
+        sys.path.insert(0, node_dir)
+    return node_dir
 
 
 def _ensure_model_downloaded(node_dir):

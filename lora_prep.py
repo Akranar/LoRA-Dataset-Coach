@@ -16,10 +16,26 @@ Chaque target a sa propre :
   - captioner prefere (WD14 tags booru vs caption naturelle)
 """
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from PIL import Image
+
+# Root folder for your local AI tools/model checkpoints (musubi-tuner,
+# diffusion-pipe model weights, etc.), substituted into the generated
+# training configs/launch scripts below in place of the author's own
+# machine paths. Set "training_models_root" in config.json (or the GUI's
+# Settings tab) to your own path - this placeholder is intentionally
+# obvious so you notice it if you forget to configure it.
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    from ldc_config import load_config as _ldc_load_config
+    _AI_ROOT_CFG = (_ldc_load_config().get("training_models_root") or "").strip()
+except Exception:
+    _AI_ROOT_CFG = ""
+AI_ROOT = _AI_ROOT_CFG or "/CHANGE_ME/ai-tools-root"
+AI_ROOT_WIN = AI_ROOT.replace("/", "\\")
 
 
 # ============================================================
@@ -1236,13 +1252,13 @@ def _musubi_launch_bat(persona_name, output_folder):
 :: Lancement musubi-tuner pour {persona_name} - ADAPTE le chemin musubi
 :: Doc : https://github.com/kohya-ss/musubi-tuner
 
-set MUSUBI_DIR=C:\\AI\\musubi-tuner
+set MUSUBI_DIR={AI_ROOT_WIN}\\musubi-tuner
 
 cd /d %MUSUBI_DIR%
 accelerate launch wan_train_network.py ^
   --dataset_config "{output_folder}\\musubi_dataset.toml" ^
   --task t2v-14B ^
-  --dit "C:\\AI\\ComfyUI-future\\ComfyUI_windows_portable\\ComfyUI\\models\\unet\\Wan2.2-T2V-A14B-HighNoise-Q8_0.gguf" ^
+  --dit "{AI_ROOT_WIN}\\ComfyUI-future\\ComfyUI_windows_portable\\ComfyUI\\models\\unet\\Wan2.2-T2V-A14B-HighNoise-Q8_0.gguf" ^
   --output_dir "{output_folder}\\output" ^
   --output_name {persona_name}_wan_lora ^
   --save_every_n_epochs 1 ^
@@ -1272,10 +1288,10 @@ warmup_steps = 100
 
 [model]
 type = 'hunyuan-video'
-transformer_path = 'C:/AI/hunyuan/transformer'
-vae_path = 'C:/AI/hunyuan/vae'
-llm_path = 'C:/AI/hunyuan/llm'
-clip_path = 'C:/AI/hunyuan/clip'
+transformer_path = '{AI_ROOT}/hunyuan/transformer'
+vae_path = '{AI_ROOT}/hunyuan/vae'
+llm_path = '{AI_ROOT}/hunyuan/llm'
+clip_path = '{AI_ROOT}/hunyuan/clip'
 dtype = 'bfloat16'
 transformer_dtype = 'float8'
 timestep_sample_method = 'logit_normal'
@@ -1384,7 +1400,7 @@ def _kohya_hunyuan_dit_toml(cfg, persona_name, output_folder):
     return f"""# Config Kohya HunyuanDiT LoRA - genere {datetime.now().strftime('%Y-%m-%d %H:%M')}
 # Voir https://github.com/Tencent/HunyuanDiT pour les chemins exacts
 [model]
-pretrained_model_name_or_path = "C:/AI/models/hunyuan-dit-1.2.safetensors"
+pretrained_model_name_or_path = "{AI_ROOT}/models/hunyuan-dit-1.2.safetensors"
 
 [folders]
 output_dir = "{str(output_folder / 'output').replace(chr(92), '/')}"
@@ -1463,7 +1479,7 @@ pipeline_stages = 1
 
 [model]
 type = 'sana'
-transformer_path = 'C:/AI/models/sana_1600M_1024px'
+transformer_path = '{AI_ROOT}/models/sana_1600M_1024px'
 text_encoder_path = 'gemma-2b-it'  # Sana utilise Gemma
 vae_path = 'dc_ae_f32c32_sana_1.0'
 dtype = 'bfloat16'
@@ -1511,12 +1527,12 @@ num_repeats = 4
 def _musubi_wan21_launch_bat(persona_name, output_folder):
     return f"""@echo off
 :: Lancement musubi-tuner Wan 2.1 pour {persona_name}
-set MUSUBI_DIR=C:\\AI\\musubi-tuner
+set MUSUBI_DIR={AI_ROOT_WIN}\\musubi-tuner
 cd /d %MUSUBI_DIR%
 accelerate launch wan_train_network.py ^
   --dataset_config "{output_folder}\\musubi_wan21_dataset.toml" ^
   --task i2v-14B ^
-  --dit "C:\\AI\\models\\Wan2.1-I2V-14B.safetensors" ^
+  --dit "{AI_ROOT_WIN}\\models\\Wan2.1-I2V-14B.safetensors" ^
   --output_dir "{output_folder}\\output" ^
   --output_name {persona_name}_wan21_lora ^
   --save_every_n_epochs 1 ^
@@ -1545,7 +1561,7 @@ pipeline_stages = 1
 
 [model]
 type = 'ltx-video'
-diffusers_path = 'C:/AI/models/LTX-Video'
+diffusers_path = '{AI_ROOT}/models/LTX-Video'
 dtype = 'bfloat16'
 transformer_dtype = 'float8'
 load_dtype = 'bfloat16'
@@ -1621,7 +1637,7 @@ pipeline_stages = 1
 
 [model]
 type = 'mochi'
-diffusers_path = 'C:/AI/models/mochi-1-preview'
+diffusers_path = '{AI_ROOT}/models/mochi-1-preview'
 dtype = 'bfloat16'
 transformer_dtype = 'float8'
 
@@ -1657,7 +1673,7 @@ gradient_accumulation_steps = 4
 
 [model]
 type = 'open-sora'
-diffusers_path = 'C:/AI/models/Open-Sora-v2.0'
+diffusers_path = '{AI_ROOT}/models/Open-Sora-v2.0'
 dtype = 'bfloat16'
 
 [adapter]
@@ -1709,7 +1725,7 @@ def _musubi_generic_bat(target, cfg, persona_name, output_folder):
     m = cfg["musubi"]
     pre = m["prefix"]
     toml = output_folder / "musubi_dataset.toml"
-    sets = "\n".join(f'set {k}=C:\\AI\\models\\{v}' for k, v in m["paths"].items())
+    sets = "\n".join(f'set {k}={AI_ROOT_WIN}\\models\\{v}' for k, v in m["paths"].items())
     if m.get("model_version"):
         sets += f'\nset MODEL_VERSION={m["model_version"]}'
     notes = "\n".join(f":: {line}" for line in _wrap(cfg.get("notes", ""), 90))
@@ -1720,7 +1736,7 @@ def _musubi_generic_bat(target, cfg, persona_name, output_folder):
 {notes}
 ::
 :: >>> ADAPTE les chemins ci-dessous a tes fichiers (noms indicatifs) <<<
-set MUSUBI_DIR=C:\\AI\\musubi-tuner
+set MUSUBI_DIR={AI_ROOT_WIN}\\musubi-tuner
 {sets}
 
 cd /d %MUSUBI_DIR%

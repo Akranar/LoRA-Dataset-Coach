@@ -793,7 +793,8 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
                          viable_only=True,
                          captioner=None,   # None = celui du target
                          progress_cb=None,
-                         quality_prefix_override=None):
+                         quality_prefix_override=None,
+                         overwrite_captions=False):
     """
     Cree le dossier final pour le trainer choisi.
     Retourne {written, skipped, errors, output_path, target, config_path}.
@@ -817,6 +818,7 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
     images_folder.mkdir(parents=True, exist_ok=True)
 
     written, skipped, errors = 0, 0, []
+    captions_skipped_existing = 0  # .txt deja present, non ecrase (overwrite_captions=False)
     imgs = analysis_data.get("images", []) or []
     total = len(imgs)
 
@@ -872,7 +874,11 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
                                   quality_prefix=q_prefix)
         if cfg.get("caption_suffix"):
             caption = f"{caption.rstrip().rstrip('.')}. {cfg['caption_suffix']}"
-        (images_folder / f"{out_name[:-4]}.txt").write_text(caption, encoding="utf-8")
+        caption_path = images_folder / f"{out_name[:-4]}.txt"
+        if not caption_path.exists() or overwrite_captions:
+            caption_path.write_text(caption, encoding="utf-8")
+        else:
+            captions_skipped_existing += 1
         written += 1
 
     # Genere le fichier de config selon le trainer
@@ -892,6 +898,7 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
     return {
         "written": written,
         "skipped": skipped,
+        "captions_skipped_existing": captions_skipped_existing,
         "errors": errors,
         "output_path": str(output_folder),
         "target": target,

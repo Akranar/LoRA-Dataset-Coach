@@ -3236,6 +3236,13 @@ class App:
         Label(dlg, text="   (Recommandé pour OneTrainer — fond noir = ignoré pendant le training)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", padx=20)
 
+        # Overwrite existing captions (si on re-lance la prep sur le meme dossier)
+        overwrite_captions_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(dlg, text="Overwrite existing captions",
+                        variable=overwrite_captions_var, font=FONT_BODY, fg=TEXT, bg=BG,
+                        selectcolor=CARD, activebackground=BG,
+                        activeforeground=TEXT).pack(anchor="w", padx=20, pady=4)
+
         # Boutons
         btn_row = Frame(dlg, bg=BG)
         btn_row.pack(side="bottom", fill="x", padx=20, pady=15)
@@ -3248,15 +3255,18 @@ class App:
             target = target_var.get()
             viable_only = viable_var.get()
             with_masks = masks_var.get()
+            overwrite_captions = overwrite_captions_var.get()
             dlg.destroy()
-            self._launch_lora_prep(data, persona, target, viable_only, with_masks)
+            self._launch_lora_prep(data, persona, target, viable_only, with_masks,
+                                    overwrite_captions)
 
         Button(btn_row, text="Annuler", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
                relief="flat", padx=20, pady=8, command=dlg.destroy).pack(side="right", padx=4)
         Button(btn_row, text="🚀 Préparer", font=FONT_BODY, bg=GREEN, fg=BG,
                relief="flat", padx=20, pady=8, command=go).pack(side="right", padx=4)
 
-    def _launch_lora_prep(self, data, persona, target, viable_only, with_masks=False):
+    def _launch_lora_prep(self, data, persona, target, viable_only, with_masks=False,
+                          overwrite_captions=False):
         import lora_prep
         cfg = lora_prep.TARGETS[target]
 
@@ -3286,6 +3296,7 @@ class App:
                     target=target,
                     viable_only=viable_only,
                     progress_cb=progress_cb,
+                    overwrite_captions=overwrite_captions,
                 )
                 # Si demande, genere aussi les masques sujet dans le dossier final
                 if with_masks:

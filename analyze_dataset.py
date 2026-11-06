@@ -972,10 +972,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                     with redirect_stdout_to_stderr():
                         tags = wd14.tag(pil_img)
                     entry["wd14_tags"] = tags
-                    if captioner_mode in ("wd14", "both", "all"):
+                    if captioner_mode in ("wd14", "both", "all") and write_captions:
                         caption_path = img_path.with_suffix(".txt")
-                        caption_path.write_text(tags, encoding="utf-8")
-                        n_caption_files_written += 1
+                        if not caption_path.exists() or overwrite_captions:
+                            caption_path.write_text(tags, encoding="utf-8")
+                            n_caption_files_written += 1
                 except Exception as e:
                     entry["wd14_error"] = str(e)[:80]
 
@@ -1317,7 +1318,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                         with redirect_stdout_to_stderr():
                             cap = florence.caption(pil_p2)
                         r["natural_caption"] = cap
-                        p.with_suffix(".nat.txt").write_text(cap, encoding="utf-8")
+                        if write_captions:
+                            nat_path = p.with_suffix(".nat.txt")
+                            if not nat_path.exists() or overwrite_captions:
+                                nat_path.write_text(cap, encoding="utf-8")
+                                n_caption_files_written += 1
                     except Exception as e:
                         r["florence_error"] = str(e)[:80]
                 # JoyCaption (si actif et pas deja fait)
@@ -1326,7 +1331,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                         with redirect_stdout_to_stderr():
                             cap = joycap.caption(pil_p2)
                         r["joycaption"] = cap
-                        p.with_suffix(".joy.txt").write_text(cap, encoding="utf-8")
+                        if write_captions:
+                            joy_path = p.with_suffix(".joy.txt")
+                            if not joy_path.exists() or overwrite_captions:
+                                joy_path.write_text(cap, encoding="utf-8")
+                                n_caption_files_written += 1
                         if captioner_mode == "joycaption":
                             r["natural_caption"] = cap
                     except Exception as e:

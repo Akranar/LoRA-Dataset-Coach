@@ -109,8 +109,25 @@ def check_for_updates() -> dict:
     }
 
 
+def _updates_disabled_message() -> str:
+    return ("Self-update is disabled by default so it can't silently overwrite local "
+            "modifications. Enable \"Allow installing updates\" in Settings (Config tab), "
+            "or set \"allow_self_update\": true in config.json, then try again.")
+
+
+def _updates_enabled() -> bool:
+    try:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from ldc_config import updates_enabled
+        return updates_enabled()
+    except Exception:
+        return False
+
+
 def apply_update_git() -> dict:
     """git pull on the install. Returns {success, message}."""
+    if not _updates_enabled():
+        return {"success": False, "message": _updates_disabled_message()}
     root = Path(__file__).parent
     if not (root / ".git").is_dir():
         return {"success": False, "message": "Not a git install"}
@@ -126,6 +143,8 @@ def apply_update_git() -> dict:
 
 def apply_update_zip(zipball_url: str, backup: bool = True) -> dict:
     """Download the release zipball, replace files in the install. Returns {success, message}."""
+    if not _updates_enabled():
+        return {"success": False, "message": _updates_disabled_message()}
     root = Path(__file__).parent
     tmp_dir = root / "_update_tmp"
     if tmp_dir.exists():

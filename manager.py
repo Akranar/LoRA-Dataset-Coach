@@ -1649,6 +1649,16 @@ class App:
                                  wraplength=900, justify="left")
         self.upd_status.pack(fill="x", pady=(8, 0))
 
+        # Opt-in : desactive par defaut pour ne jamais ecraser des
+        # modifications locales sans que l'utilisateur l'ait explicitement
+        # demande. La garde reelle est dans updater.py (ldc_config.updates_enabled()).
+        allow_update_var = tk.BooleanVar(value=bool(self.cfg.get("allow_self_update", False)))
+        self.entries["allow_self_update"] = allow_update_var
+        tk.Checkbutton(upd_card, text="Allow installing updates (can overwrite local files)",
+                        variable=allow_update_var, font=FONT_BODY, fg=TEXT, bg=CARD,
+                        selectcolor=BG2, activebackground=CARD,
+                        activeforeground=TEXT).pack(anchor="w", pady=(6, 0))
+
         upd_btn_row = Frame(upd_card, bg=CARD)
         upd_btn_row.pack(fill="x", pady=(8, 0))
         make_button(upd_btn_row, "🔄 Vérifier maintenant",

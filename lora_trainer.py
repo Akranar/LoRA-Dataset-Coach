@@ -37,7 +37,7 @@ def detect_runner(folder):
     """Renvoie {"kind": "bat"|"aitoolkit"|None, "file": Path|None, "readme": str|None}."""
     folder = Path(folder)
     if not folder.is_dir():
-        return {"kind": None, "file": None, "error": f"Dossier introuvable : {folder}"}
+        return {"kind": None, "file": None, "error": f"Folder not found: {folder}"}
     bats = sorted(folder.glob("launch_*.bat"))
     yamls = sorted(folder.glob("ai_toolkit*.yaml"))
     readme = folder / "README.txt"
@@ -47,8 +47,8 @@ def detect_runner(folder):
     if yamls:
         return {"kind": "aitoolkit", "file": yamls[0], **info}
     return {"kind": None, "file": None,
-            "error": "Pas de launch_*.bat ni de ai_toolkit*.yaml : ce target se lance "
-                     "depuis son propre trainer (voir README.txt).", **info}
+            "error": "No launch_*.bat or ai_toolkit*.yaml: this target launches "
+                     "from its own trainer (see README.txt).", **info}
 
 
 def read_bat_vars(bat_path):
@@ -96,15 +96,15 @@ def build_command(runner, aitoolkit_dir=None, aitoolkit_python=None):
     f = Path(runner["file"])
     if runner["kind"] == "bat":
         if os.name != "nt":
-            raise RuntimeError("Les .bat musubi ne se lancent que sous Windows.")
+            raise RuntimeError("musubi .bat files can only be launched on Windows.")
         return ["cmd", "/c", str(f)], str(f.parent)
     if runner["kind"] == "aitoolkit":
         d = Path(aitoolkit_dir or "")
         if not (d / "run.py").is_file():
-            raise RuntimeError(f"ai-toolkit introuvable : {d / 'run.py'} (onglet Config).")
+            raise RuntimeError(f"ai-toolkit not found: {d / 'run.py'} (Config tab).")
         py = aitoolkit_python or sys.executable
         return [py, "run.py", str(f)], str(d)
-    raise RuntimeError(runner.get("error") or "Runner inconnu.")
+    raise RuntimeError(runner.get("error") or "Unknown runner.")
 
 
 def start(cmd, cwd):

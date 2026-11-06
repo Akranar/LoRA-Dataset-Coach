@@ -29,7 +29,7 @@ SHOT_PROMPT_MAP = {
     },
     # Plans
     "plan moyen": {
-        "key_tags": ["plan moyen", "mi-corps", "both", "upper body"],
+        "key_tags": ["plan moyen", "mi-corps", "both", "upper body", "medium shot", "half-body"],
         "prompt_fragment": "upper body shot, visible from waist up",
         "dp_variation": "{upper body shot|mid shot from waist up|three-quarter length portrait|half-body framing}",
     },
@@ -46,7 +46,7 @@ SHOT_PROMPT_MAP = {
     },
     # Generic
     "variete": {
-        "key_tags": ["varie", "manque", "ajoute"],
+        "key_tags": ["varie", "manque", "ajoute", "vary", "variety", "add variety"],
         "prompt_fragment": "diverse pose and expression",
         "dp_variation": "{relaxed pose|natural standing|seated comfortably|hands at waist|hands in pockets}",
     },

@@ -87,7 +87,7 @@ def analyze_voice_file(path):
         result["snr_db"] = _snr_estimate(signal, sr)
         result["f0_mean_hz"] = _f0_mean(signal, sr)
     except Exception as e:
-        result["issues"].append(f"Lecture impossible : {e}")
+        result["issues"].append(f"Unreadable: {e}")
         result["score"] = "F"
         return result
 
@@ -95,23 +95,23 @@ def analyze_voice_file(path):
     issues = []
     dur = result["duration_s"] or 0
     if dur < 3:
-        issues.append(f"Trop court ({dur:.1f}s, min 3s)")
+        issues.append(f"Too short ({dur:.1f}s, min 3s)")
     if dur > 30:
-        issues.append(f"Très long ({dur:.1f}s) — couper en segments de 3-15s")
+        issues.append(f"Too long ({dur:.1f}s) — split into 3-15s segments")
     if sr < 40000:
-        issues.append(f"Taux trop bas ({sr} Hz, recommandé ≥40kHz pour RVC)")
+        issues.append(f"Sample rate too low ({sr} Hz, recommend ≥40kHz for RVC)")
     if result["rms_db"] is not None and result["rms_db"] < -35:
-        issues.append(f"Niveau très faible ({result['rms_db']} dB) — normaliser")
+        issues.append(f"Level very low ({result['rms_db']} dB) — normalize")
     if result["snr_db"] is not None and result["snr_db"] < 20:
-        issues.append(f"SNR faible ({result['snr_db']} dB) — trop de bruit de fond")
+        issues.append(f"Low SNR ({result['snr_db']} dB) — too much background noise")
     if result["ext"] not in {".wav", ".flac"}:
-        issues.append(f"Format compressé ({result['ext']}) — convertir en WAV/FLAC")
+        issues.append(f"Compressed format ({result['ext']}) — convert to WAV/FLAC")
 
     result["issues"] = issues
 
     # ---- note ----
     if issues:
-        critical = [i for i in issues if "impossible" in i or "Trop court" in i]
+        critical = [i for i in issues if "Unreadable" in i or "Too short" in i]
         result["score"] = "D" if critical else ("C" if len(issues) > 1 else "B")
     else:
         snr = result["snr_db"] or 0
@@ -183,20 +183,20 @@ def _rvc_recommendation(total_dur_s, grade_counts, total):
     total_min = total_dur_s / 60
     msgs = []
     if total_min < 3:
-        msgs.append(f"⚠️ Durée totale {total_min:.1f} min — RVC recommande au moins 3 min (idéal 10-30 min)")
+        msgs.append(f"⚠️ Total duration {total_min:.1f} min — RVC recommends at least 3 min (ideally 10-30 min)")
     elif total_min < 10:
-        msgs.append(f"💡 {total_min:.1f} min — correct, mais 10+ min donnera un meilleur résultat")
+        msgs.append(f"💡 {total_min:.1f} min — OK, but 10+ min will give a better result")
     else:
-        msgs.append(f"✅ {total_min:.1f} min — durée excellente pour RVC")
+        msgs.append(f"✅ {total_min:.1f} min — excellent duration for RVC")
     bad = grade_counts.get("C", 0) + grade_counts.get("D", 0) + grade_counts.get("F", 0)
     if bad > 0:
-        msgs.append(f"⚠️ {bad}/{total} fichiers ont des problèmes de qualité — filtre-les avant l'entraînement")
+        msgs.append(f"⚠️ {bad}/{total} files have quality issues — filter them out before training")
     return " · ".join(msgs)
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python analyze_voice.py <dossier>")
+        print("Usage: python analyze_voice.py <folder>")
         sys.exit(1)
     summary = analyze_voice_folder(
         sys.argv[1],

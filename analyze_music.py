@@ -87,27 +87,27 @@ def analyze_music_file(path):
 
     issues = []
     if dur is None:
-        issues.append("Lecture impossible")
+        issues.append("Unreadable")
     else:
         if dur < MIN_DURATION_S:
-            issues.append(f"Trop court ({dur:.0f}s, min {MIN_DURATION_S}s)")
+            issues.append(f"Too short ({dur:.0f}s, min {MIN_DURATION_S}s)")
         if dur > MAX_DURATION_S:
-            issues.append(f"Très long ({dur:.0f}s) — peut causer OOM sur 16 Go")
+            issues.append(f"Too long ({dur:.0f}s) — can cause OOM on 16 GB")
     if not lyrics_path.exists():
-        issues.append("Paroles manquantes (.lyrics.txt)")
+        issues.append("Missing lyrics (.lyrics.txt)")
     if not json_path.exists() and not caption_path.exists():
-        issues.append("Annotations manquantes (.json / .caption.txt)")
+        issues.append("Missing annotations (.json / .caption.txt)")
     if meta and not meta.get("bpm"):
-        issues.append("BPM absent dans le JSON")
+        issues.append("BPM missing from JSON")
     if meta and not meta.get("keyscale"):
-        issues.append("Tonalité (keyscale) absente dans le JSON")
+        issues.append("Key (keyscale) missing from JSON")
     if rms is not None and rms < -30:
-        issues.append(f"Niveau sonore faible ({rms} dB) — normaliser")
+        issues.append(f"Low sound level ({rms} dB) — normalize")
 
     # note
-    crit = [i for i in issues if "impossible" in i or "manquant" in i.lower()]
+    crit = [i for i in issues if "Unreadable" in i or "missing" in i.lower()]
     if crit:
-        score = "F" if "impossible" in " ".join(crit) else "D"
+        score = "F" if "Unreadable" in " ".join(crit) else "D"
     elif issues:
         score = "C" if len(issues) > 1 else "B"
     else:
@@ -135,9 +135,9 @@ def generate_json_template(path, overwrite=False):
     if out.exists() and not overwrite:
         return False, str(out)
     template = {
-        "caption": f"FILL: description du style musical de {p.stem}",
+        "caption": f"FILL: musical style description for {p.stem}",
         "bpm": 0,
-        "keyscale": "FILL: ex C Major ou A Minor",
+        "keyscale": "FILL: e.g. C Major or A Minor",
         "timesignature": "4",
         "language": "fr",
     }
@@ -234,24 +234,24 @@ def _top_issues(issues):
 def _music_recommendation(total, total_dur_s, missing_lyrics, missing_json, gc):
     msgs = []
     if total < 5:
-        msgs.append(f"⚠️ Seulement {total} morceaux — ACE-Step recommande ≥10 (idéal 20-50 par style)")
+        msgs.append(f"⚠️ Only {total} track(s) — ACE-Step recommends ≥10 (ideally 20-50 per style)")
     elif total < 10:
-        msgs.append(f"💡 {total} morceaux — correct, 20+ donnera un meilleur LoRA")
+        msgs.append(f"💡 {total} track(s) — OK, 20+ will give a better LoRA")
     else:
-        msgs.append(f"✅ {total} morceaux")
+        msgs.append(f"✅ {total} track(s)")
     if missing_lyrics > 0:
-        msgs.append(f"⚠️ {missing_lyrics} fichiers sans paroles — crée les .lyrics.txt (Whisper peut transcrire)")
+        msgs.append(f"⚠️ {missing_lyrics} file(s) without lyrics — create the .lyrics.txt (Whisper can transcribe)")
     if missing_json > 0:
-        msgs.append(f"💡 {missing_json} sans annotations — clique 'Générer les JSON' pour créer les templates")
+        msgs.append(f"💡 {missing_json} without annotations — click 'Generate JSON' to create the templates")
     bad = gc.get("C", 0) + gc.get("D", 0) + gc.get("F", 0)
     if bad > 0:
-        msgs.append(f"⚠️ {bad} fichiers avec problèmes — corrige avant l'entraînement")
+        msgs.append(f"⚠️ {bad} file(s) with issues — fix before training")
     return " · ".join(msgs)
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python analyze_music.py <dossier>")
+        print("Usage: python analyze_music.py <folder>")
         sys.exit(1)
     summary = analyze_music_folder(
         sys.argv[1],

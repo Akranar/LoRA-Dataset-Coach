@@ -20,12 +20,12 @@ class Florence2Captioner:
             import torch
             from transformers import AutoProcessor, AutoModelForCausalLM
         except Exception as e:
-            raise RuntimeError(f"transformers/torch manquant : {e}")
+            raise RuntimeError(f"Missing transformers/torch: {e}")
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.float16 if device == "cuda" else torch.float32
 
-        print(f"STEP Chargement Florence-2 ({device}, ~540 Mo si 1er run)...",
+        print(f"STEP Loading Florence-2 ({device}, ~540 MB on first run)...",
               file=sys.stderr, flush=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name, trust_remote_code=True, torch_dtype=dtype

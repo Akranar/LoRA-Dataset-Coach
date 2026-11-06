@@ -162,13 +162,13 @@ def apply_update_zip(zipball_url: str, backup: bool = True) -> dict:
         with urllib.request.urlopen(req, timeout=120) as resp:
             zip_path.write_bytes(resp.read())
     except Exception as e:
-        return {"success": False, "message": f"Téléchargement échoué : {e}"}
+        return {"success": False, "message": f"Download failed: {e}"}
 
     try:
         with zipfile.ZipFile(zip_path) as zf:
             zf.extractall(extract_dir)
     except Exception as e:
-        return {"success": False, "message": f"Décompression échouée : {e}"}
+        return {"success": False, "message": f"Extraction failed: {e}"}
 
     # GitHub enveloppe tout dans un dossier akalavol-LoRA-Dataset-Coach-<sha>/
     # On prend le SEUL sous-dossier de extract_dir (en ignorant tout fichier).
@@ -214,13 +214,13 @@ def apply_update_zip(zipball_url: str, backup: bool = True) -> dict:
 
     if not replaced:
         return {"success": False,
-                "message": "Aucun fichier copié (archive vide ou structure inattendue)."}
+                "message": "No file copied (empty archive or unexpected structure)."}
 
     new_ver = get_current_version()  # relit le VERSION fraîchement écrit
     return {
         "success": True,
-        "message": f"{len(replaced)} fichier(s) mis à jour → version {new_ver}.\n"
-                   f"Backup dans {backup_dir.name}/",
+        "message": f"{len(replaced)} file(s) updated → version {new_ver}.\n"
+                   f"Backup in {backup_dir.name}/",
         "replaced": replaced[:30],
     }
 

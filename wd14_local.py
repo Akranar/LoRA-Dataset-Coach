@@ -37,7 +37,7 @@ def _ensure_model_downloaded(model_name=DEFAULT_MODEL):
     onnx = target_dir / f"{model_name}.onnx"
     csv_path = target_dir / f"{model_name}.csv"
 
-    print(f"STEP Telechargement WD14 {model_name} (~330 Mo, une seule fois)...",
+    print(f"STEP Downloading WD14 {model_name} (~330 MB, one time)...",
           file=sys.stderr, flush=True)
     try:
         from huggingface_hub import hf_hub_download
@@ -55,7 +55,7 @@ def _ensure_model_downloaded(model_name=DEFAULT_MODEL):
         if src.exists() and src != csv_path:
             src.rename(csv_path)
     except Exception as e:
-        print(f"STEP Echec telechargement WD14 : {e}", file=sys.stderr, flush=True)
+        print(f"STEP Failed to download WD14: {e}", file=sys.stderr, flush=True)
         return None, None
 
     return str(onnx), str(csv_path)
@@ -73,7 +73,7 @@ class WD14Tagger:
 
         onnx_path, csv_path = _ensure_model_downloaded()
         if not onnx_path:
-            raise RuntimeError("Modele WD14 introuvable et echec du telechargement")
+            raise RuntimeError("WD14 model not found and download failed")
 
         # Init session ONNX (CPU - on n'a pas besoin de GPU pour 30 photos)
         providers = ["CPUExecutionProvider"]

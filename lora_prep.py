@@ -265,8 +265,8 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "Licence FLUX.2-dev Non-Commercial. Encodeur texte Mistral Small 3.2 24B : "
-                 "tres gourmand en VRAM (quantize obligatoire sous 48 Go).",
+        "notes": "FLUX.2-dev Non-Commercial license. Mistral Small 3.2 24B text encoder: "
+                 "very VRAM-hungry (quantization required under 48 GB).",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/ostris/ai-toolkit",
     },
@@ -285,8 +285,8 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "Entraine sur la version BASE (non distillee) ; le LoRA s'applique ensuite a klein 9B. "
-                 "Pour klein 4B : remplace arch par flux2_klein_4b et le repo par FLUX.2-klein-base-4B.",
+        "notes": "Trained on the BASE version (not distilled); the LoRA then applies to klein 9B. "
+                 "For klein 4B: replace arch with flux2_klein_4b and the repo with FLUX.2-klein-base-4B.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/ostris/ai-toolkit",
     },
@@ -315,8 +315,8 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "MODEL_VERSION : dev | klein-base-4b | klein-base-9b (entraine sur les 'base', "
-                 "pas sur les klein distilles). Klein : encodeur Qwen3-4B / Qwen3-8B.",
+        "notes": "MODEL_VERSION: dev | klein-base-4b | klein-base-9b (trained on the 'base' "
+                 "variants, not the distilled klein ones). Klein: Qwen3-4B / Qwen3-8B encoder.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/flux_2.md",
     },
@@ -346,8 +346,8 @@ TARGETS = {
         "network_alpha": 16,
         "learning_rate": 5e-5,
         "category": "image_modern",
-        "notes": "Encodeur Qwen2.5-VL 7B. Les variantes Edit (edit-2509 / edit-2511) exigent des "
-                 "images de controle : ce dataset photo seul ne sert qu'a 'original'.",
+        "notes": "Qwen2.5-VL 7B encoder. The Edit variants (edit-2509 / edit-2511) require "
+                 "control images: this photo-only dataset only works for 'original'.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/qwen_image.md",
     },
@@ -366,7 +366,7 @@ TARGETS = {
         "network_alpha": 16,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "Pour Qwen-Image 2.x : arch qwen_image_2 + repo Qwen/Qwen-Image-2.1.",
+        "notes": "For Qwen-Image 2.x: arch qwen_image_2 + repo Qwen/Qwen-Image-2.1.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/ostris/ai-toolkit",
     },
@@ -394,8 +394,8 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "Entraine sur Z-Image BASE. Sur Turbo l'entrainement est instable : "
-                 "utilise ostris/Z-Image-De-Turbo ou --base_weights zimage_turbo_training_adapter.",
+        "notes": "Trained on Z-Image BASE. Training is unstable on Turbo: "
+                 "use ostris/Z-Image-De-Turbo or --base_weights zimage_turbo_training_adapter.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/zimage.md",
     },
@@ -414,7 +414,7 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "image_modern",
-        "notes": "Base recommandee. Pour Turbo, passe par l'adaptateur d'entrainement d'ostris (UI ai-toolkit).",
+        "notes": "Base recommended. For Turbo, use ostris's training adapter (ai-toolkit UI).",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/ostris/ai-toolkit",
     },
@@ -468,9 +468,9 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 2e-4,
         "category": "video",
-        "notes": "VAE = Wan 2.1 VAE (le Wan2.2_VAE est reserve au 5B). musubi n'entraine PAS sur du GGUF. "
-                 "--offload_inactive_dit demande ~96 Go de RAM ; sinon remplace par --blocks_to_swap 20. "
-                 "Pour I2V : --task i2v-A14B, --timestep_boundary 0.9 et les DiT I2V.",
+        "notes": "VAE = Wan 2.1 VAE (Wan2.2_VAE is reserved for the 5B model). musubi does NOT train on GGUF. "
+                 "--offload_inactive_dit needs ~96 GB of RAM; otherwise replace with --blocks_to_swap 20. "
+                 "For I2V: --task i2v-A14B, --timestep_boundary 0.9 and the I2V DiTs.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/wan.md",
     },
@@ -492,8 +492,8 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "video",
-        "notes": "Config calquee sur config/examples/train_lora_wan22_14b_24gb.yaml. "
-                 "Wan 2.5 / 2.6 / 2.7 = API seulement, pas de poids : impossible d'y entrainer un LoRA.",
+        "notes": "Config modeled on config/examples/train_lora_wan22_14b_24gb.yaml. "
+                 "Wan 2.5 / 2.6 / 2.7 = API only, no weights: impossible to train a LoRA on them.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/ostris/ai-toolkit",
     },
@@ -522,12 +522,12 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "video",
-        "notes": "Pour ComfyUI : convertis le LoRA avec networks/convert_hunyuan_video_1_5_lora_to_comfy.py.",
+        "notes": "For ComfyUI: convert the LoRA with networks/convert_hunyuan_video_1_5_lora_to_comfy.py.",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/hunyuan_video_1_5.md",
     },
     "ltx2_aitoolkit": {
-        "label": "LTX-2.5 22B audio+vidéo (ai-toolkit)",
+        "label": "LTX-2.5 22B audio+video (ai-toolkit)",
         "base_model": "Lightricks/LTX-2.5",
         # LTX-2 : largeur/hauteur multiples de 32
         "resolutions": [(960, 544), (544, 960), (768, 768)],
@@ -542,14 +542,14 @@ TARGETS = {
         "network_alpha": 32,
         "learning_rate": 1e-4,
         "category": "video",
-        "notes": "arch ltx2 / ltx2.3 / ltx2.5 selon ta version. Trainer officiel alternatif : "
-                 "Lightricks/LTX-2 packages/ltx-trainer (dataset CSV/JSONL, frames 8n+1, 32 Go+ VRAM). "
-                 "Captions : un seul paragraphe decrivant image ET son (images = 'silent').",
+        "notes": "arch ltx2 / ltx2.3 / ltx2.5 depending on your version. Alternative official trainer: "
+                 "Lightricks/LTX-2 packages/ltx-trainer (CSV/JSONL dataset, 8n+1 frames, 32 GB+ VRAM). "
+                 "Captions: a single paragraph describing both image AND sound (images = 'silent').",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/Lightricks/LTX-2/tree/main/packages/ltx-trainer",
     },
     "minimax_h3_musubi": {
-        "label": "MiniMax-H3 33B image LoRA (musubi-tuner, expérimental)",
+        "label": "MiniMax-H3 33B image LoRA (musubi-tuner, experimental)",
         "base_model": "minimax_h3_fl2va_bf16.safetensors",
         # H3 : buckets sur une grille de 32 px
         "resolutions": [(1024, 1024), (1344, 768), (768, 1344)],
@@ -579,11 +579,11 @@ TARGETS = {
         "network_alpha": 16,
         "learning_rate": 1e-4,
         "category": "video",
-        "notes": "Checkpoint CFG-distille : un entrainement flow-matching 'nu' le detruit en ~50 steps. "
-                 "Le .bat utilise un adaptateur de de-distillation (--base_weights, ex. "
-                 "circlestone-labs/MiniMax-H3-Image-Training-Adapter). batch_size=1 impose. "
-                 "LICENCE : verifie ton pays, la MiniMax H3 Community License exclurait l'UE, "
-                 "le Royaume-Uni, la Coree du Sud et les USA (non verifie sur le texte officiel).",
+        "notes": "CFG-distilled checkpoint: a 'raw' flow-matching training run destroys it in ~50 steps. "
+                 "The .bat uses a de-distillation adapter (--base_weights, e.g. "
+                 "circlestone-labs/MiniMax-H3-Image-Training-Adapter). batch_size=1 is required. "
+                 "LICENSE: check your country — the MiniMax H3 Community License reportedly excludes the EU, "
+                 "the UK, South Korea and the US (not verified against the official text).",
         "verified": "2026-09-28",
         "trainer_doc_url": "https://github.com/kohya-ss/musubi-tuner/blob/main/docs/minimax_h3.md",
     },
@@ -592,7 +592,7 @@ TARGETS = {
     # LEGACY (2023-2024) - gardes pour compatibilite
     # ===========================================================
     "wan21_musubi": {
-        "label": "Wan 2.1 vidéo (musubi-tuner)",
+        "label": "Wan 2.1 video (musubi-tuner)",
         "base_model": "Wan2.1-I2V-14B.safetensors",
         "resolutions": [(720, 720), (832, 480), (480, 832)],
         "crop_strategy": "bucket_face",
@@ -679,11 +679,11 @@ TARGETS = {
 # Categories pour grouper dans la GUI
 TARGET_CATEGORIES = {
     "image_modern":    "✨ Image 2025-2026 (FLUX.2 / Qwen-Image / Z-Image / Chroma)",
-    "video":           "🎬 Vidéo 2025-2026 (Wan 2.2 / HunyuanVideo 1.5 / LTX-2 / MiniMax-H3)",
-    "image_photo":     "📸 Photo réaliste (SDXL / FLUX.1)",
+    "video":           "🎬 Video 2025-2026 (Wan 2.2 / HunyuanVideo 1.5 / LTX-2 / MiniMax-H3)",
+    "image_photo":     "📸 Realistic photo (SDXL / FLUX.1)",
     "image_anime":     "🎨 Anime/Style (SDXL forks)",
-    "legacy":          "🗄 Legacy (anciens modèles, compatibilité)",
-    "default":         "🖼  Autre",
+    "legacy":          "🗄 Legacy (older models, compatibility)",
+    "default":         "🖼  Other",
 }
 
 # Ordre d'affichage dans la GUI
@@ -816,7 +816,7 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
     Retourne {written, skipped, errors, output_path, target, config_path}.
     """
     if target not in TARGETS:
-        raise ValueError(f"Target inconnu : {target}. Liste : {list(TARGETS.keys())}")
+        raise ValueError(f"Unknown target: {target}. List: {list(TARGETS.keys())}")
 
     cfg = TARGETS[target]
     source_folder = Path(source_folder)
@@ -851,7 +851,7 @@ def prepare_lora_folder(analysis_data, source_folder, output_folder,
 
         src_path = Path(img.get("path", ""))
         if not src_path.is_file():
-            errors.append(f"introuvable : {src_path.name}")
+            errors.append(f"not found: {src_path.name}")
             continue
 
         try:
@@ -1110,31 +1110,31 @@ batch_size = 1
 
 
 def _kohya_gui_settings(cfg, persona_name, output_folder, sd15=False):
-    """Reglages a RECOPIER a la main dans la GUI Kohya (onglets Model / Parameters).
-    Volontairement en .txt pour ne PAS etre confondu avec un fichier a charger."""
+    """Settings to COPY by hand into the Kohya GUI (Model / Parameters tabs).
+    Deliberately a .txt so it isn't mistaken for a file to load."""
     base = cfg["base_model"]
     res = cfg["resolutions"][0]
-    return f"""REGLAGES KOHYA CONSEILLES — {('SD 1.5' if sd15 else 'SDXL')} — persona "{persona_name}"
-(A recopier dans la GUI Kohya. Ne PAS charger ce fichier dans un champ toml.)
+    return f"""RECOMMENDED KOHYA SETTINGS — {('SD 1.5' if sd15 else 'SDXL')} — persona "{persona_name}"
+(Copy these into the Kohya GUI. Do NOT load this file into a toml field.)
 
-== Onglet "Accelerate launch" / Model ==
+== "Accelerate launch" / Model tab ==
   Pretrained model name or path : {base}
-     (ou le chemin complet vers ton checkpoint, ex:
-      C:/AI/ComfyUI-future/ComfyUI_windows_portable/ComfyUI/models/checkpoints/{base})
-  {'(coche "SDXL Model")' if not sd15 else '(SD 1.5 : ne coche PAS SDXL/v2)'}
+     (or the full path to your checkpoint, e.g.:
+      /path/to/ComfyUI/models/checkpoints/{base})
+  {'(check "SDXL Model")' if not sd15 else '(SD 1.5: do NOT check SDXL/v2)'}
 
-== Onglet "Folders" ==
+== "Folders" tab ==
   Dataset Config : {str(output_folder / 'dataset_config.toml').replace(chr(92), '/')}
-     (c'est LE fichier a mettre ici)
+     (this is THE file to put here)
   Output folder  : {str(output_folder / 'output').replace(chr(92), '/')}
   Output name    : {persona_name}_lora
 
-== Onglet "Parameters" ==
+== "Parameters" tab ==
   LoRA type            : Standard
   Train batch size     : 1
   Epoch                : {cfg['default_epochs']}
   Save every N epochs  : 1
-  Mixed precision      : bf16 (ou fp16)
+  Mixed precision      : bf16 (or fp16)
   Network Rank (dim)   : {cfg['network_dim']}
   Network Alpha        : {cfg['network_alpha']}
   Learning rate        : {cfg['learning_rate']}
@@ -1145,10 +1145,10 @@ def _kohya_gui_settings(cfg, persona_name, output_folder, sd15=False):
   Gradient checkpointing : ON
   xformers             : ON
 
-== ALTERNATIVE SANS dataset_config (methode dossier) ==
-  Laisse "Dataset Config" VIDE et mets dans "Image folder" :
+== ALTERNATIVE WITHOUT dataset_config (folder method) ==
+  Leave "Dataset Config" EMPTY and put in "Image folder":
      {str(output_folder).replace(chr(92), '/')}
-  (le parent de {cfg['default_repeats'] or 10}_{persona_name}/) — Kohya deduit les repeats du nom du dossier.
+  (the parent of {cfg['default_repeats'] or 10}_{persona_name}/) — Kohya infers the repeats from the folder name.
 """
 
 
@@ -1314,19 +1314,19 @@ def _generate_readme(target, cfg, persona_name, repeats, written, skipped, capti
                       output_folder, images_folder):
     return f"""LoRA TRAINING DATASET - {persona_name}
 {'='*60}
-Target : {cfg['label']}
-Genere le : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Photos exportees : {written}   |   Exclues : {skipped}
-Resolution(s) : {cfg['resolutions']}
-Captioner : {captioner}
-Repeats : {repeats}
-Trainer doc : {cfg['trainer_doc_url']}
+Target: {cfg['label']}
+Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Photos exported: {written}   |   Excluded: {skipped}
+Resolution(s): {cfg['resolutions']}
+Captioner: {captioner}
+Repeats: {repeats}
+Trainer doc: {cfg['trainer_doc_url']}
 
 STRUCTURE
 ---------
 {Path(images_folder).name}/
     {persona_name}_001.png
-    {persona_name}_001.txt   (caption avec trigger word « {persona_name} »)
+    {persona_name}_001.txt   (caption with trigger word « {persona_name} »)
     ...
 {(f'launch_{target}.bat + musubi_dataset.toml' if cfg['config_format'] == 'musubi_generic' else
   f'ai_toolkit_{target}.yaml' if cfg['config_format'] == 'aitoolkit_generic' else
@@ -1334,24 +1334,24 @@ STRUCTURE
   'ai_toolkit_config.yaml' if 'aitoolkit' in cfg['config_format'] else
   'musubi_dataset.toml + launch_musubi.bat' if 'musubi' in cfg['config_format'] else
   'diffusion_pipe_config.toml' if 'diffpipe' in cfg['config_format'] else
-  '(pas de config auto - se configure dans la GUI OneTrainer)')}
+  '(no auto config - set up in the OneTrainer GUI)')}
 
-NOTES MODELE (verifie le {cfg.get('verified', '?')})
+MODEL NOTES (verified on {cfg.get('verified', '?')})
 {cfg.get('notes', '-')}
 
-TRIGGER WORD : {persona_name}
-Pour invoquer le LoRA, ajoute « {persona_name} » dans tes prompts.
+TRIGGER WORD: {persona_name}
+To invoke the LoRA, add « {persona_name} » to your prompts.
 
-LANCEMENT
+LAUNCHING
 ---------
 {_launch_instructions(target, cfg, persona_name, output_folder)}
 
-CONSEILS
---------
-- Epochs : commence aux defaults ({cfg['default_epochs']}), regarde les samples chaque epoch
-- Overfit (LoRA = photocopie) : baisse network_dim ou augmente caption_dropout_rate
-- Underfit (visage approximatif) : monte epochs ou network_dim ({cfg['network_dim']} -> {cfg['network_dim']*2})
-- Resolution(s) : {cfg['resolutions']} (multi-bucket si plusieurs)
+TIPS
+----
+- Epochs: start at the defaults ({cfg['default_epochs']}), check samples every epoch
+- Overfit (LoRA = photocopy): lower network_dim or raise caption_dropout_rate
+- Underfit (approximate face): raise epochs or network_dim ({cfg['network_dim']} -> {cfg['network_dim']*2})
+- Resolution(s): {cfg['resolutions']} (multi-bucket if more than one)
 """
 
 
@@ -1741,15 +1741,15 @@ set MUSUBI_DIR={AI_ROOT_WIN}\\musubi-tuner
 
 cd /d %MUSUBI_DIR%
 
-echo [1/3] Cache des latents...
+echo [1/3] Caching latents...
 python src\\musubi_tuner\\{pre}_cache_latents.py --dataset_config "{toml}" {m['latents_args']}
 if errorlevel 1 goto :fail
 
-echo [2/3] Cache de l'encodeur texte...
+echo [2/3] Caching text encoder outputs...
 python src\\musubi_tuner\\{pre}_cache_text_encoder_outputs.py --dataset_config "{toml}" {m['te_args']}
 if errorlevel 1 goto :fail
 
-echo [3/3] Entrainement LoRA...
+echo [3/3] Training LoRA...
 accelerate launch --num_cpu_threads_per_process 1 --mixed_precision bf16 src\\musubi_tuner\\{pre}_train_network.py ^
   --dataset_config "{toml}" ^
   {m['train_args']} ^
@@ -1760,12 +1760,12 @@ accelerate launch --num_cpu_threads_per_process 1 --mixed_precision bf16 src\\mu
   --max_train_epochs {cfg['default_epochs']} --save_every_n_epochs 1 --seed 42 ^
   --output_dir "{output_folder}\\output" --output_name {persona_name}_{target}
 if errorlevel 1 goto :fail
-echo Termine : {output_folder}\\output
+echo Done: {output_folder}\\output
 pause
 exit /b 0
 
 :fail
-echo ECHEC - lis le message ci-dessus (chemin de modele faux ? VRAM ?)
+echo FAILED - read the message above (wrong model path? VRAM?)
 pause
 exit /b 1
 """
@@ -1850,104 +1850,104 @@ config:
 def _launch_instructions(target, cfg, persona_name, output_folder):
     fmt = cfg["config_format"]
     if fmt == "musubi_generic":
-        return ("1. Installe musubi-tuner : git clone https://github.com/kohya-ss/musubi-tuner\n"
-                f"2. Edite launch_{target}.bat : MUSUBI_DIR + chemins des modeles (lignes 'set')\n"
-                f"3. Double-clic launch_{target}.bat (cache latents -> cache texte -> training)\n"
-                f"4. Sortie : output/{persona_name}_{target}.safetensors")
+        return ("1. Install musubi-tuner: git clone https://github.com/kohya-ss/musubi-tuner\n"
+                f"2. Edit launch_{target}.bat: MUSUBI_DIR + model paths ('set' lines)\n"
+                f"3. Double-click launch_{target}.bat (latent cache -> text cache -> training)\n"
+                f"4. Output: output/{persona_name}_{target}.safetensors")
     if fmt == "aitoolkit_generic":
-        return ("1. Installe ai-toolkit : git clone https://github.com/ostris/ai-toolkit\n"
-                f"2. python run.py <chemin>/ai_toolkit_{target}.yaml\n"
-                "   (ou UI ai-toolkit > New Job > colle le YAML)\n"
-                "3. Modeles telecharges depuis HuggingFace au premier lancement\n"
-                "4. Sortie : output/")
+        return ("1. Install ai-toolkit: git clone https://github.com/ostris/ai-toolkit\n"
+                f"2. python run.py <path>/ai_toolkit_{target}.yaml\n"
+                "   (or ai-toolkit UI > New Job > paste the YAML)\n"
+                "3. Models are downloaded from HuggingFace on first run\n"
+                "4. Output: output/")
     if fmt == "kohya_toml":
         return (
-            "1. Lance Kohya SS GUI (LoRA)\n"
-            "2. Onglet Folders > champ 'Dataset Config' : mets dataset_config.toml\n"
-            "   (ce dossier). NE PAS le charger via 'Load config' !\n"
-            "3. Renseigne le modele de base + Output folder (voir kohya_GUI_SETTINGS.txt\n"
-            "   pour tous les reglages conseilles a recopier).\n"
+            "1. Launch Kohya SS GUI (LoRA)\n"
+            "2. Folders tab > 'Dataset Config' field: set dataset_config.toml\n"
+            "   (in this folder). Do NOT load it via 'Load config'!\n"
+            "3. Fill in the base model + Output folder (see kohya_GUI_SETTINGS.txt\n"
+            "   for every recommended setting to copy over).\n"
             "4. Train model.\n"
-            "   --- OU methode dossier (sans toml) : champ 'Image folder' = ce dossier\n"
-            "   (le parent du sous-dossier N_persona), 'Dataset Config' vide.\n"
-            f"5. Sortie : output/{persona_name}_lora.safetensors")
+            "   --- OR folder method (no toml): 'Image folder' field = this folder\n"
+            "   (the parent of the N_persona subfolder), 'Dataset Config' left empty.\n"
+            f"5. Output: output/{persona_name}_lora.safetensors")
     if fmt == "kohya_toml_flux":
-        return (f"1. Lance Kohya SS GUI\n"
-                f"2. Onglet LoRA > Tools > Load config > kohya_flux_config.toml\n"
-                f"3. Verifie le chemin du modele de base\n"
+        return (f"1. Launch Kohya SS GUI\n"
+                f"2. LoRA tab > Tools > Load config > kohya_flux_config.toml\n"
+                f"3. Check the base model path\n"
                 f"4. Train model\n"
-                f"5. Sortie : output/{persona_name}_lora.safetensors")
+                f"5. Output: output/{persona_name}_lora.safetensors")
     if fmt == "aitoolkit_yaml":
-        return ("1. Installe ai-toolkit (git clone + pip install)\n"
-                f"2. Copie ai_toolkit_config.yaml dans ai-toolkit/config/\n"
+        return ("1. Install ai-toolkit (git clone + pip install)\n"
+                f"2. Copy ai_toolkit_config.yaml into ai-toolkit/config/\n"
                 f"3. python run.py config/ai_toolkit_config.yaml\n"
-                f"4. Sortie : output/{persona_name}_flux_lora/")
+                f"4. Output: output/{persona_name}_flux_lora/")
     if fmt == "musubi_toml":
-        return ("1. Installe musubi-tuner (git clone + pip install)\n"
-                "2. Edite launch_musubi.bat : verifie MUSUBI_DIR et --dit path\n"
-                "3. Double-clic launch_musubi.bat\n"
-                f"4. Sortie : output/{persona_name}_wan_lora.safetensors")
+        return ("1. Install musubi-tuner (git clone + pip install)\n"
+                "2. Edit launch_musubi.bat: check MUSUBI_DIR and --dit path\n"
+                "3. Double-click launch_musubi.bat\n"
+                f"4. Output: output/{persona_name}_wan_lora.safetensors")
     if fmt == "diffpipe_toml":
-        return ("1. Installe diffusion-pipe (git clone)\n"
-                "2. Edite diffusion_pipe_config.toml : adapte transformer_path etc.\n"
+        return ("1. Install diffusion-pipe (git clone)\n"
+                "2. Edit diffusion_pipe_config.toml: set transformer_path etc.\n"
                 "3. deepspeed --num_gpus=1 train.py --config diffusion_pipe_config.toml\n"
-                f"4. Sortie : output/")
+                f"4. Output: output/")
     if fmt == "onetrainer_hint":
-        return ("1. Lance OneTrainer\n"
-                "2. Charge un preset SDXL LoRA\n"
-                f"3. Concepts > Add > pointe vers images/\n"
-                "4. Le trigger word est deja dans les captions\n"
+        return ("1. Launch OneTrainer\n"
+                "2. Load an SDXL LoRA preset\n"
+                f"3. Concepts > Add > point to images/\n"
+                "4. The trigger word is already in the captions\n"
                 "5. Train")
     if fmt == "kohya_toml_sd35":
-        return ("1. Installe kohya-ss/sd-scripts branche sd3 :\n"
+        return ("1. Install the sd3 branch of kohya-ss/sd-scripts:\n"
                 "   git clone -b sd3 https://github.com/kohya-ss/sd-scripts\n"
-                "2. Verifie les chemins clip_l / clip_g / t5xxl dans kohya_sd35_config.toml\n"
+                "2. Check the clip_l / clip_g / t5xxl paths in kohya_sd35_config.toml\n"
                 "3. accelerate launch sd3_train_network.py --config kohya_sd35_config.toml\n"
-                f"4. Sortie : output/{persona_name}_sd35_lora.safetensors")
+                f"4. Output: output/{persona_name}_sd35_lora.safetensors")
     if fmt == "kohya_toml_hunyuan_dit":
-        return ("1. Installe le trainer HunyuanDiT (Tencent/HunyuanDiT)\n"
-                "2. Adapte les chemins dans kohya_hunyuan_dit_config.toml\n"
+        return ("1. Install the HunyuanDiT trainer (Tencent/HunyuanDiT)\n"
+                "2. Set the paths in kohya_hunyuan_dit_config.toml\n"
                 "3. python hydit_train_network.py --config kohya_hunyuan_dit_config.toml\n"
-                f"4. Sortie : output/{persona_name}_hunyuan_dit_lora.safetensors")
+                f"4. Output: output/{persona_name}_hunyuan_dit_lora.safetensors")
     if fmt == "aitoolkit_yaml_chroma":
-        return ("1. Installe ai-toolkit (git clone + pip install)\n"
-                "2. Copie ai_toolkit_chroma_config.yaml dans ai-toolkit/config/\n"
+        return ("1. Install ai-toolkit (git clone + pip install)\n"
+                "2. Copy ai_toolkit_chroma_config.yaml into ai-toolkit/config/\n"
                 "3. python run.py config/ai_toolkit_chroma_config.yaml\n"
-                f"4. Sortie : output/{persona_name}_chroma_lora/")
+                f"4. Output: output/{persona_name}_chroma_lora/")
     if fmt == "diffpipe_toml_sana":
-        return ("1. Installe diffusion-pipe (git clone)\n"
-                "2. Telecharge Sana 1600M 1024px sur HuggingFace\n"
-                "3. Adapte transformer_path / text_encoder_path / vae_path\n"
-                "4. Cree aussi dataset_sana.toml (template dans le .toml principal)\n"
+        return ("1. Install diffusion-pipe (git clone)\n"
+                "2. Download Sana 1600M 1024px from HuggingFace\n"
+                "3. Set transformer_path / text_encoder_path / vae_path\n"
+                "4. Also create dataset_sana.toml (template in the main .toml)\n"
                 "5. deepspeed --num_gpus=1 train.py --config diffusion_pipe_sana.toml\n"
-                f"6. Sortie : output/")
+                f"6. Output: output/")
     if fmt == "musubi_toml_wan21":
-        return ("1. Installe musubi-tuner\n"
-                "2. Edite launch_musubi_wan21.bat : verifie MUSUBI_DIR et --dit\n"
-                "3. Double-clic launch_musubi_wan21.bat\n"
-                f"4. Sortie : output/{persona_name}_wan21_lora.safetensors")
+        return ("1. Install musubi-tuner\n"
+                "2. Edit launch_musubi_wan21.bat: check MUSUBI_DIR and --dit\n"
+                "3. Double-click launch_musubi_wan21.bat\n"
+                f"4. Output: output/{persona_name}_wan21_lora.safetensors")
     if fmt == "diffpipe_toml_ltx":
-        return ("1. Installe diffusion-pipe\n"
-                "2. Telecharge LTX-Video 0.9 (Lightricks)\n"
-                "3. Adapte diffusers_path dans diffusion_pipe_ltx.toml\n"
-                "4. Cree dataset_ltx.toml (template dans le .toml principal)\n"
+        return ("1. Install diffusion-pipe\n"
+                "2. Download LTX-Video 0.9 (Lightricks)\n"
+                "3. Set diffusers_path in diffusion_pipe_ltx.toml\n"
+                "4. Create dataset_ltx.toml (template in the main .toml)\n"
                 "5. deepspeed --num_gpus=1 train.py --config diffusion_pipe_ltx.toml\n"
-                "Note : LTX peut entrainer en image-only OR video frames.\n"
-                "Pour video, ajoute des clips MP4 dans le dossier images/")
+                "Note: LTX can train on image-only OR video frames.\n"
+                "For video, add MP4 clips into the images/ folder")
     if fmt == "diffpipe_toml_cogvideox":
-        return ("1. Installe cogvideox-factory : git clone https://github.com/a-r-r-o-w/cogvideox-factory\n"
-                "2. Edite les variables dans cogvideox_factory_config.yaml\n"
-                "3. accelerate launch training/cogvideox_text_to_video_lora.py (voir commentaires)\n"
-                "Note : 24 Go VRAM mini recommande pour CogVideoX-5b")
+        return ("1. Install cogvideox-factory: git clone https://github.com/a-r-r-o-w/cogvideox-factory\n"
+                "2. Edit the variables in cogvideox_factory_config.yaml\n"
+                "3. accelerate launch training/cogvideox_text_to_video_lora.py (see comments)\n"
+                "Note: 24 GB VRAM minimum recommended for CogVideoX-5b")
     if fmt == "diffpipe_toml_mochi":
-        return ("1. Installe diffusion-pipe\n"
-                "2. Telecharge mochi-1-preview (Genmo)\n"
-                "3. Adapte diffusers_path + cree dataset_mochi.toml\n"
+        return ("1. Install diffusion-pipe\n"
+                "2. Download mochi-1-preview (Genmo)\n"
+                "3. Set diffusers_path + create dataset_mochi.toml\n"
                 "4. deepspeed --num_gpus=1 train.py --config diffusion_pipe_mochi.toml\n"
-                "Note : Mochi est tres lourd. Vraie utilite : etyle/concept, persona moins ideal")
+                "Note: Mochi is very heavy. Best suited to style/concept work, less ideal for a persona")
     if fmt == "diffpipe_toml_opensora":
-        return ("1. Installe diffusion-pipe OU le trainer natif Open-Sora (hpcaitech/Open-Sora)\n"
-                "2. Le trainer natif gere mieux les datasets larges\n"
-                "3. Cree dataset_opensora.toml (template dans le .toml principal)\n"
+        return ("1. Install diffusion-pipe OR the native Open-Sora trainer (hpcaitech/Open-Sora)\n"
+                "2. The native trainer handles large datasets better\n"
+                "3. Create dataset_opensora.toml (template in the main .toml)\n"
                 "4. deepspeed --num_gpus=1 train.py --config diffusion_pipe_opensora.toml")
     return ""

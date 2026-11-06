@@ -76,7 +76,7 @@ from ldc_config import CONFIG_FILE, DEFAULT_CONFIG, load_config, save_config
 def open_in_explorer(path):
     p = Path(path)
     if not p.exists():
-        messagebox.showerror("Erreur", f"Dossier introuvable :\n{path}")
+        messagebox.showerror("Error", f"Folder not found:\n{path}")
         return
     if sys.platform == "win32":
         os.startfile(str(p))
@@ -144,11 +144,11 @@ class App:
         header.pack(fill="x")
         Label(header, text="🧬  LoRA Dataset Coach",
               font=FONT_TITLE, fg=TEXT, bg=BG).pack(side="left")
-        Label(header, text="Analyse · Prépare · Évalue tes datasets LoRA",
+        Label(header, text="Analyze · Prepare · Evaluate your LoRA datasets",
               font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(side="left", padx=15, pady=8)
 
         # Status bar (cree AVANT les tabs car ils l'utilisent pendant init)
-        self.status_var = StringVar(value="Pret")
+        self.status_var = StringVar(value="Ready")
         status_bar = Frame(root, bg=BG2, padx=15, pady=6)
         status_bar.pack(fill="x", side="bottom")
         Label(status_bar, textvariable=self.status_var,
@@ -177,34 +177,34 @@ class App:
     # =========================================================
     def _build_trainer_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=15, pady=12)
-        parent.add(frame, text="  🏋 Créer LoRA  ")
+        parent.add(frame, text="  🏋 Create LoRA  ")
         self.train_proc = None
         self.train_runner = None
         self.train_vars = {}
 
-        Label(frame, text="Créateur de LoRA", font=FONT_H1, fg=ACCENT2, bg=BG).pack(anchor="w")
-        Label(frame, text="1. Analyse → 🧬 Préparer LoRA   2. Ici : vérifie les chemins, lance "
-                          "l'entraînement, suis la progression   3. Envoie les checkpoints à "
-                          "ComfyUI → test en lot dans 📊 Évaluer : tu gardes la meilleure epoch.",
+        Label(frame, text="LoRA Creator", font=FONT_H1, fg=ACCENT2, bg=BG).pack(anchor="w")
+        Label(frame, text="1. Analyze → 🧬 Prepare LoRA   2. Here: check the paths, start "
+                          "training, follow progress   3. Send the checkpoints to "
+                          "ComfyUI → batch-test in 📊 Evaluate: keep the best epoch.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=1000, justify="left").pack(anchor="w", pady=(0, 8))
 
         row = Frame(frame, bg=CARD, padx=10, pady=8)
         row.pack(fill="x", pady=3)
-        Label(row, text="📁 Dossier préparé :", font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
+        Label(row, text="📁 Prepared folder:", font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.train_folder = StringVar(value="")
         tk.Entry(row, textvariable=self.train_folder, font=FONT_MONO, bg=BG2, fg=TEXT,
                  insertbackground=TEXT, relief="flat").pack(side="left", fill="x", expand=True,
                                                              ipady=5, padx=8)
 
         def pick():
-            d = filedialog.askdirectory(title="Dossier créé par « Préparer LoRA »")
+            d = filedialog.askdirectory(title="Folder created by “Prepare LoRA”")
             if d:
                 self.train_folder.set(d)
                 self._train_load_folder()
         make_button(row, "📂", pick).pack(side="left")
         make_button(row, "↻", self._train_load_folder).pack(side="left", padx=4)
 
-        self.train_info = Label(frame, text="Choisis un dossier préparé.", font=FONT_SMALL,
+        self.train_info = Label(frame, text="Choose a prepared folder.", font=FONT_SMALL,
                                 fg=TEXT_DIM, bg=BG, justify="left", anchor="w", wraplength=1000)
         self.train_info.pack(fill="x", pady=(2, 4))
 
@@ -214,19 +214,19 @@ class App:
 
         ctl = Frame(frame, bg=BG)
         ctl.pack(fill="x", pady=6)
-        self.train_start_btn = Button(ctl, text="🏋 Lancer l'entraînement", font=FONT_H1, bg=GREEN,
+        self.train_start_btn = Button(ctl, text="🏋 Start training", font=FONT_H1, bg=GREEN,
                                       fg=BG, relief="flat", padx=16, pady=6, command=self._train_start)
         self.train_start_btn.pack(side="left")
-        self.train_stop_btn = Button(ctl, text="⏹ Arrêter", font=FONT_BODY, bg=RED, fg=BG,
+        self.train_stop_btn = Button(ctl, text="⏹ Stop", font=FONT_BODY, bg=RED, fg=BG,
                                      relief="flat", padx=12, pady=6, state="disabled",
                                      command=self._train_stop)
         self.train_stop_btn.pack(side="left", padx=8)
-        self.train_send_btn = Button(ctl, text="📤 Checkpoints → ComfyUI → test en lot", font=FONT_BODY,
+        self.train_send_btn = Button(ctl, text="📤 Checkpoints → ComfyUI → batch test", font=FONT_BODY,
                                      bg=ACCENT, fg=BG, relief="flat", padx=12, pady=6,
                                      command=self._train_send_checkpoints)
         self.train_send_btn.pack(side="right")
 
-        self.train_status = Label(frame, text="⏸ En attente", font=FONT_BODY, fg=TEXT_DIM, bg=BG,
+        self.train_status = Label(frame, text="⏸ Waiting", font=FONT_BODY, fg=TEXT_DIM, bg=BG,
                                   anchor="w")
         self.train_status.pack(fill="x")
         self.train_progress = ttk.Progressbar(frame, mode="determinate", maximum=100)
@@ -244,22 +244,22 @@ class App:
                                           width=38, height=9, selectmode="extended",
                                           exportselection=False)
         self.train_ckpt_list.pack(fill="both", expand=True)
-        Label(right, text="Ctrl/Maj+clic : sélection multiple", font=FONT_SMALL,
+        Label(right, text="Ctrl/Shift+click: multiple selection", font=FONT_SMALL,
               fg=TEXT_DIM, bg=CARD).pack(anchor="w")
 
         # Comparaison rapide : meme prompt + meme seed, 1 image par checkpoint selectionne
         # (vars partagees avec l'onglet Evaluer, construit apres)
         self.cmp_prompt = StringVar(value="close-up portrait photo of {trigger}, natural light, sharp focus")
         self.cmp_seed = tk.IntVar(value=1234)
-        Label(right, text="🖼 Comparaison rapide", font=FONT_BODY, fg=ACCENT, bg=CARD).pack(anchor="w", pady=(6, 0))
+        Label(right, text="🖼 Quick compare", font=FONT_BODY, fg=ACCENT, bg=CARD).pack(anchor="w", pady=(6, 0))
         tk.Entry(right, textvariable=self.cmp_prompt, font=FONT_SMALL, bg=BG2, fg=TEXT,
                  insertbackground=TEXT, relief="flat").pack(fill="x", pady=2)
         seed_row = Frame(right, bg=CARD)
         seed_row.pack(fill="x")
-        Label(seed_row, text="Seed :", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
+        Label(seed_row, text="Seed:", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
         tk.Entry(seed_row, textvariable=self.cmp_seed, font=FONT_SMALL, width=10, bg=BG2, fg=TEXT,
                  insertbackground=TEXT, relief="flat").pack(side="left", padx=4)
-        self.train_cmp_btn = Button(right, text="🖼 1 image par checkpoint sélectionné", font=FONT_SMALL,
+        self.train_cmp_btn = Button(right, text="🖼 1 image per selected checkpoint", font=FONT_SMALL,
                                     bg=ACCENT2, fg=BG, relief="flat", pady=4,
                                     command=self._train_quick_compare)
         self.train_cmp_btn.pack(fill="x", pady=(4, 0))
@@ -277,7 +277,7 @@ class App:
         for w in self.train_paths_frame.winfo_children():
             w.destroy()
         self.train_vars = {}
-        r = lt.detect_runner(folder) if folder else {"kind": None, "error": "Aucun dossier."}
+        r = lt.detect_runner(folder) if folder else {"kind": None, "error": "No folder."}
         self.train_runner = r
         if not r.get("kind"):
             self.train_info.config(text=f"⚠️ {r.get('error')}", fg=YELLOW)
@@ -303,8 +303,8 @@ class App:
                 picker = None if k == "MODEL_VERSION" else (
                     self._pick_folder if k.endswith("_DIR") else self._pick_file)
                 field(k, var, i, picker)
-            self.train_info.config(text=f"✅ musubi-tuner : {r['file'].name} — vérifie les chemins "
-                                        f"ci-dessous (enregistrés dans le .bat au lancement).", fg=GREEN)
+            self.train_info.config(text=f"✅ musubi-tuner: {r['file'].name} — check the paths "
+                                        f"below (saved into the .bat on launch).", fg=GREEN)
         else:
             for i, (k, lbl, picker) in enumerate((
                     ("aitoolkit_dir", "ai-toolkit dir", self._pick_folder),
@@ -312,8 +312,8 @@ class App:
                 var = StringVar(value=self.cfg.get(k, ""))
                 self.train_vars[k] = var
                 field(lbl, var, i, picker)
-            self.train_info.config(text=f"✅ ai-toolkit : {r['file'].name} — les modèles sont "
-                                        f"téléchargés depuis HuggingFace au 1er lancement.", fg=GREEN)
+            self.train_info.config(text=f"✅ ai-toolkit: {r['file'].name} — models are "
+                                        f"downloaded from HuggingFace on first launch.", fg=GREEN)
         self._train_refresh_checkpoints()
 
     def _train_start(self):
@@ -322,15 +322,15 @@ class App:
         if not r or not r.get("kind"):
             return
         if self.train_proc and self.train_proc.poll() is None:
-            messagebox.showwarning("Entraînement", "Un entraînement tourne déjà.")
+            messagebox.showwarning("Training", "A training run is already in progress.")
             return
         vals = {k: v.get().strip() for k, v in self.train_vars.items()}
         if r["kind"] == "bat":
             missing = lt.check_paths(vals)
             if missing and not messagebox.askyesno(
-                    "Chemins introuvables",
-                    "Ces fichiers/dossiers n'existent pas :\n" + "\n".join("• " + m for m in missing) +
-                    "\n\nL'entraînement va très probablement échouer. Lancer quand même ?"):
+                    "Paths not found",
+                    "These files/folders do not exist:\n" + "\n".join("• " + m for m in missing) +
+                    "\n\nTraining will very likely fail. Launch anyway?"):
                 return
             lt.write_bat_vars(r["file"], vals)
         else:
@@ -343,14 +343,14 @@ class App:
             cmd, cwd = lt.build_command(r, vals.get("aitoolkit_dir"), vals.get("aitoolkit_python"))
             self.train_proc = lt.start(cmd, cwd)
         except Exception as e:
-            messagebox.showerror("Lancement impossible", str(e))
+            messagebox.showerror("Cannot launch", str(e))
             return
         self.train_log.delete("1.0", "end")
-        self._train_log_write(f"$ {' '.join(cmd)}\n   (dans {cwd})\n\n")
+        self._train_log_write(f"$ {' '.join(cmd)}\n   (in {cwd})\n\n")
         self.train_start_btn.config(state="disabled")
         self.train_stop_btn.config(state="normal")
         self.train_progress.config(value=0)
-        self.train_status.config(text="🏋 Entraînement en cours…", fg=ACCENT)
+        self.train_status.config(text="🏋 Training in progress…", fg=ACCENT)
         proc = self.train_proc
 
         def reader():
@@ -389,16 +389,16 @@ class App:
         n = self.train_ckpt_list.size()
         if code == 0:
             self.train_progress.config(value=100)
-            self.train_status.config(text=f"✅ Terminé — {n} checkpoint(s). Envoie-les au test en lot.",
+            self.train_status.config(text=f"✅ Done — {n} checkpoint(s). Send them to batch test.",
                                      fg=GREEN)
         else:
-            self.train_status.config(text=f"❌ Arrêt (code {code}) — lis le log ci-dessous "
-                                          f"({n} checkpoint(s) déjà produits)", fg=RED)
+            self.train_status.config(text=f"❌ Stopped (code {code}) — see the log below "
+                                          f"({n} checkpoint(s) already produced)", fg=RED)
 
     def _train_stop(self):
         import lora_trainer as lt
-        if self.train_proc and messagebox.askyesno("Arrêter", "Arrêter l'entraînement ? "
-                                                   "Les checkpoints déjà sauvés restent utilisables."):
+        if self.train_proc and messagebox.askyesno("Stop", "Stop training? "
+                                                   "Checkpoints already saved remain usable."):
             lt.stop(self.train_proc)
 
     def _train_refresh_checkpoints(self):
@@ -418,11 +418,11 @@ class App:
         folder = self.train_folder.get().strip()
         ckpts = lt.list_checkpoints(folder) if folder else []
         if not ckpts:
-            messagebox.showinfo("Checkpoints", "Aucun checkpoint dans output/ pour l'instant.")
+            messagebox.showinfo("Checkpoints", "No checkpoint in output/ yet.")
             return
         loras_dir = self.cfg.get("comfyui_loras_dir", "")
         if not Path(loras_dir).is_dir():
-            d = filedialog.askdirectory(title="Dossier ComfyUI/models/loras")
+            d = filedialog.askdirectory(title="ComfyUI/models/loras folder")
             if not d:
                 return
             loras_dir = d
@@ -435,17 +435,17 @@ class App:
         try:
             res = lt.publish_to_comfyui(ckpts, loras_dir, run)
         except Exception as e:
-            messagebox.showerror("Copie impossible", str(e))
+            messagebox.showerror("Cannot copy", str(e))
             return
         # Bascule vers l'evaluateur, filtre pre-rempli, liste rafraichie
         self.comfy_batch_filter.set(res["filter"])
         self._comfy_card_open(True)
         self.select_tab("evaluator")
         self._comfy_refresh_loras()
-        messagebox.showinfo("Checkpoints envoyés",
-                            f"{len(res['copied'])} checkpoint(s) copiés dans\n{res['dest']}\n\n"
-                            "Dans 📊 Évaluer : renseigne les photos réelles + le workflow, puis "
-                            "« 📦 Tester le lot et classer ».")
+        messagebox.showinfo("Checkpoints sent",
+                            f"{len(res['copied'])} checkpoint(s) copied to\n{res['dest']}\n\n"
+                            "In 📊 Evaluate: fill in the real photos + the workflow, then "
+                            "“📦 Test the batch and rank”.")
 
     # =========================================================
     # COMPARAISON RAPIDE (Creer LoRA + Evaluer) : meme prompt, meme seed,
@@ -454,13 +454,13 @@ class App:
     def _ensure_comfy_settings(self):
         """Demande ce qui manque (workflow API, photos reelles) puis valide."""
         if not Path(self.comfy_wf.get().strip()).is_file():
-            f = filedialog.askopenfilename(title="Workflow ComfyUI exporté en format API",
+            f = filedialog.askopenfilename(title="ComfyUI workflow exported in API format",
                                            filetypes=[("Workflow API", "*.json")])
             if not f:
                 return None
             self.comfy_wf.set(f)
         if not Path(self.eval_ref_path.get().strip()).is_dir():
-            d = filedialog.askdirectory(title="Dossier de photos RÉELLES du sujet (≠ entraînement)")
+            d = filedialog.askdirectory(title="Folder of REAL subject photos (not training photos)")
             if not d:
                 return None
             self.eval_ref_path.set(d)
@@ -473,8 +473,8 @@ class App:
         ckpts = lt.list_checkpoints(folder) if folder else []
         sel = [ckpts[i] for i in self.train_ckpt_list.curselection() if i < len(ckpts)]
         if len(sel) < 2:
-            messagebox.showinfo("Comparaison", "Sélectionne au moins 2 checkpoints dans la liste "
-                                               "(Ctrl+clic ou Maj+clic).")
+            messagebox.showinfo("Compare", "Select at least 2 checkpoints in the list "
+                                               "(Ctrl+click or Shift+click).")
             return
         chk = self._ensure_comfy_settings()
         if not chk:
@@ -482,7 +482,7 @@ class App:
         url, _ = chk
         loras_dir = self.cfg.get("comfyui_loras_dir", "")
         if not Path(loras_dir).is_dir():
-            loras_dir = filedialog.askdirectory(title="Dossier ComfyUI/models/loras")
+            loras_dir = filedialog.askdirectory(title="ComfyUI/models/loras folder")
             if not loras_dir:
                 return
             self.cfg["comfyui_loras_dir"] = loras_dir
@@ -495,8 +495,8 @@ class App:
         wanted = {p.name for p in sel}
         names = [l for l in installed if Path(l.replace("\\", "/")).name in wanted]
         if len(names) != len(sel):
-            messagebox.showerror("ComfyUI", f"ComfyUI ne voit que {len(names)}/{len(sel)} checkpoints "
-                                            f"dans {pub['dest']}. Vérifie le dossier models/loras.")
+            messagebox.showerror("ComfyUI", f"ComfyUI only sees {len(names)}/{len(sel)} checkpoints "
+                                            f"in {pub['dest']}. Check the models/loras folder.")
             return
         self._quick_compare(names, self.train_status)
 
@@ -509,17 +509,17 @@ class App:
         try:
             loras = cc.list_loras(url)
         except Exception as e:
-            messagebox.showerror("ComfyUI", f"ComfyUI injoignable sur {url} :\n{e}")
+            messagebox.showerror("ComfyUI", f"Cannot reach ComfyUI at {url}:\n{e}")
             return
         pat = self.comfy_batch_filter.get().strip()
         if pat:
             loras = cc.filter_loras(loras, pat)
         # Choix des LoRA (pre-selection : ceux du filtre)
         dlg = tk.Toplevel(self.root)
-        dlg.title("LoRA à comparer")
+        dlg.title("LoRAs to compare")
         dlg.configure(bg=BG)
         dlg.geometry("520x460")
-        Label(dlg, text="Sélectionne les LoRA à comparer (Ctrl/Maj+clic)", font=FONT_BODY,
+        Label(dlg, text="Select the LoRAs to compare (Ctrl/Shift+click)", font=FONT_BODY,
               fg=TEXT, bg=BG).pack(anchor="w", padx=12, pady=(10, 4))
         lb = tk.Listbox(dlg, selectmode="extended", bg=BG2, fg=TEXT, font=FONT_SMALL,
                         relief="flat", exportselection=False)
@@ -532,11 +532,11 @@ class App:
         def go():
             names = [loras[i] for i in lb.curselection()]
             if len(names) < 2:
-                messagebox.showinfo("Comparaison", "Choisis au moins 2 LoRA.", parent=dlg)
+                messagebox.showinfo("Compare", "Choose at least 2 LoRAs.", parent=dlg)
                 return
             dlg.destroy()
             self._quick_compare(names, self.eval_phase)
-        Button(dlg, text="🖼 Générer 1 image chacun", font=FONT_BODY, bg=ACCENT2, fg=BG,
+        Button(dlg, text="🖼 Generate 1 image each", font=FONT_BODY, bg=ACCENT2, fg=BG,
                relief="flat", padx=12, pady=6, command=go).pack(pady=10)
 
     def _quick_compare(self, lora_names, status_label):
@@ -567,20 +567,20 @@ class App:
                                         base_url=url,
                                         progress_cb=lambda c, t, n: say(f"🖼 ComfyUI {c}/{t} — {n}"))
                 if not r["images"]:
-                    say("❌ Aucune image : " + " | ".join(r["errors"][:2]), RED)
+                    say("❌ No image: " + " | ".join(r["errors"][:2]), RED)
                     return
-                say("🔬 Mesure de la ressemblance aux photos réelles…")
+                say("🔬 Measuring resemblance to the real photos…")
                 ev = self._eval_run_once(str(out), ref, "")
                 bev = (self._eval_run_once(str(out / "_baseline"), ref, "")
                        if r["baseline"] else None)
                 if "error" in ev:
-                    say(f"❌ Évaluateur : {ev['error']}", RED)
+                    say(f"❌ Evaluator: {ev['error']}", RED)
                     return
                 rows, base = cc.closest_lora(r["images"], ev,
                                              bev if bev and "error" not in bev else None)
                 best = rows[0] if rows and rows[0]["sim"] is not None else None
-                say((f"⭐ Le plus proche : {Path(best['lora'].replace(chr(92), '/')).name} "
-                     f"({best['sim']:.3f})") if best else "⚠️ Aucun visage détecté",
+                say((f"⭐ Closest: {Path(best['lora'].replace(chr(92), '/')).name} "
+                     f"({best['sim']:.3f})") if best else "⚠️ No face detected",
                     GREEN if best else YELLOW)
                 self.root.after(0, lambda: self._show_compare_window(
                     rows, base, r["baseline"], ref, prompt, seed, out, r["errors"]))
@@ -592,12 +592,12 @@ class App:
 
     def _show_compare_window(self, rows, base_sim, base_img, ref_folder, prompt, seed, out, errors):
         win = tk.Toplevel(self.root)
-        win.title("Comparaison rapide — même prompt, même seed")
+        win.title("Quick compare — same prompt, same seed")
         win.configure(bg=BG)
-        Label(win, text=f"🖼 « {prompt} »  ·  seed {seed}", font=FONT_H1, fg=ACCENT2, bg=BG,
+        Label(win, text=f"🖼 “{prompt}”  ·  seed {seed}", font=FONT_H1, fg=ACCENT2, bg=BG,
               wraplength=1100, justify="left").pack(anchor="w", padx=12, pady=(10, 0))
-        Label(win, text="Ressemblance = similarité du visage (InsightFace) avec tes photos RÉELLES. "
-                        "1 seed = indication rapide ; pour décider d'une epoch, utilise le test en lot.",
+        Label(win, text="Resemblance = face similarity (InsightFace) to your REAL photos. "
+                        "1 seed = quick indication; to decide on an epoch, use the batch test.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=1100, justify="left").pack(anchor="w", padx=12)
         grid = Frame(win, bg=BG)
         grid.pack(padx=12, pady=10)
@@ -609,18 +609,18 @@ class App:
 
         cells = []
         if ref_img:
-            cells.append(("📸 Référence réelle", str(ref_img), "", TEXT_DIM, False))
+            cells.append(("📸 Real reference", str(ref_img), "", TEXT_DIM, False))
         if base_img:
-            cells.append(("Sans LoRA (témoin)", base_img,
-                          f"{base_sim:.3f}" if base_sim is not None else "pas de visage", TEXT_DIM, False))
+            cells.append(("No LoRA (control)", base_img,
+                          f"{base_sim:.3f}" if base_sim is not None else "no face", TEXT_DIM, False))
         for r in rows:
             name = Path(r["lora"].replace("\\", "/")).name
             if r["sim"] is None:
-                txt, col = "❌ visage non détecté", RED
+                txt, col = "❌ no face detected", RED
             else:
-                gain = f"  ({r['sim'] - base_sim:+.3f} vs témoin)" if base_sim is not None else ""
+                gain = f"  ({r['sim'] - base_sim:+.3f} vs control)" if base_sim is not None else ""
                 txt, col = f"{r['sim']:.3f}{gain}", (GREEN if r is best else TEXT)
-            cells.append((("⭐ LE PLUS PROCHE\n" if r is best else "") + name, r["image"], txt, col, r is best))
+            cells.append((("⭐ CLOSEST\n" if r is best else "") + name, r["image"], txt, col, r is best))
 
         # Jusqu'a 8 cases (= 6 LoRA) : 4 par ligne en 240 px ; au-dela, plus petit
         per_row, thumb = (4, 240) if len(cells) <= 8 else (6, 170)
@@ -637,14 +637,14 @@ class App:
                     win._photos.append(ph)
                     Label(inner, image=ph, bg=CARD).pack()
                 except Exception:
-                    Label(inner, text="(image illisible)", fg=RED, bg=CARD, width=30, height=10).pack()
+                    Label(inner, text="(unreadable image)", fg=RED, bg=CARD, width=30, height=10).pack()
             Label(inner, text=title, font=FONT_SMALL, fg=GREEN if is_best else TEXT, bg=CARD,
                   wraplength=thumb, justify="center").pack(pady=(4, 0))
             if score:
                 Label(inner, text=score, font=FONT_BODY, fg=col, bg=CARD).pack()
         foot = f"📁 {out}"
         if errors:
-            foot += f"   ⚠️ {len(errors)} génération(s) en échec : " + " | ".join(errors[:2])
+            foot += f"   ⚠️ {len(errors)} failed generation(s): " + " | ".join(errors[:2])
         Label(win, text=foot, font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=1100,
               justify="left").pack(anchor="w", padx=12, pady=(0, 10))
 
@@ -655,15 +655,15 @@ class App:
     # ============================================================
     def _build_evaluator_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=15, pady=12)
-        parent.add(frame, text="  📊 Évaluer LoRA  ")
+        parent.add(frame, text="  📊 Evaluate LoRA  ")
 
-        Label(frame, text="Évaluateur LoRA post-entraînement",
+        Label(frame, text="Post-training LoRA evaluator",
               font=FONT_H1, fg=ACCENT2, bg=BG).pack(anchor="w")
         Label(frame,
-              text="Une fois ton LoRA entraîné, génère ~30 images de test, "
-                   "puis fournis-les ici avec des photos réelles du sujet "
-                   "(différentes de celles d'entraînement). On calcule R-FaceSim, "
-                   "Copycat, Black Hole — le standard 2026 (MirrorMetrics).",
+              text="Once your LoRA is trained, generate ~30 test images, "
+                   "then provide them here along with real photos of the subject "
+                   "(different from the training ones). We compute R-FaceSim, "
+                   "Copycat, Black Hole — the 2026 standard (MirrorMetrics).",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=900,
               justify="left").pack(anchor="w", pady=(0, 10))
 
@@ -676,7 +676,7 @@ class App:
         # Generated folder
         gen_frame = Frame(frame, bg=CARD, padx=10, pady=8)
         gen_frame.pack(fill="x", pady=4)
-        Label(gen_frame, text="🎲 Images générées par ton LoRA :",
+        Label(gen_frame, text="🎲 Images generated by your LoRA:",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.eval_gen_path = StringVar(value=r"C:\AI\datasets\lora_test_output")
         tk.Entry(gen_frame, textvariable=self.eval_gen_path, font=FONT_MONO,
@@ -688,7 +688,7 @@ class App:
         # Reference folder (REAL photos of subject)
         ref_frame = Frame(frame, bg=CARD, padx=10, pady=8)
         ref_frame.pack(fill="x", pady=4)
-        Label(ref_frame, text="📸 Photos RÉELLES du sujet :",
+        Label(ref_frame, text="📸 REAL photos of the subject:",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.eval_ref_path = StringVar(value="")
         tk.Entry(ref_frame, textvariable=self.eval_ref_path, font=FONT_MONO,
@@ -697,13 +697,13 @@ class App:
         make_button(ref_frame, "📂",
                      lambda: pick_folder_for(self.eval_ref_path)).pack(side="left")
         Label(frame,
-              text="   ⚠️ Doivent être différentes des photos d'entraînement (sinon score gonflé)",
+              text="   ⚠️ Must be different from the training photos (otherwise the score is inflated)",
               font=FONT_SMALL, fg=YELLOW, bg=BG).pack(anchor="w", padx=10, pady=(0, 4))
 
         # Training folder (optional)
         train_frame = Frame(frame, bg=CARD, padx=10, pady=8)
         train_frame.pack(fill="x", pady=4)
-        Label(train_frame, text="🧬 Dataset d'entraînement (optionnel, copycat check) :",
+        Label(train_frame, text="🧬 Training dataset (optional, copycat check):",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.eval_train_path = StringVar(value="")
         tk.Entry(train_frame, textvariable=self.eval_train_path, font=FONT_MONO,
@@ -716,12 +716,12 @@ class App:
         self._build_comfy_eval_card(frame)
 
         # Bouton lancer
-        Button(frame, text="🚀 Évaluer le LoRA", font=FONT_H1, bg=ACCENT2, fg=BG,
+        Button(frame, text="🚀 Evaluate the LoRA", font=FONT_H1, bg=ACCENT2, fg=BG,
                relief="flat", padx=20, pady=10, cursor="hand2",
                command=self._run_evaluator).pack(pady=12)
 
         # Progress
-        self.eval_phase = Label(frame, text="⏸ En attente",
+        self.eval_phase = Label(frame, text="⏸ Waiting",
                                  font=FONT_BODY, fg=TEXT_DIM, bg=BG)
         self.eval_phase.pack(anchor="w", pady=4)
         self.eval_progress = ttk.Progressbar(frame, mode="determinate",
@@ -739,12 +739,12 @@ class App:
         self.eval_tree = ttk.Treeview(eval_tree_frame, columns=cols, show="tree headings",
                                        height=14)
         self.eval_tree.heading("#0", text="Image")
-        self.eval_tree.heading("face", text="Visage")
+        self.eval_tree.heading("face", text="Face")
         self.eval_tree.heading("rsim", text="R-FaceSim")
         self.eval_tree.heading("rsim_max", text="Max")
-        self.eval_tree.heading("near_ref", text="Réf proche")
-        self.eval_tree.heading("near_train", text="Train proche")
-        self.eval_tree.heading("copycat", text="Copycat ?")
+        self.eval_tree.heading("near_ref", text="Closest ref")
+        self.eval_tree.heading("near_train", text="Closest train")
+        self.eval_tree.heading("copycat", text="Copycat?")
         self.eval_tree.column("#0", width=180)
         self.eval_tree.column("face", width=70, anchor="center")
         self.eval_tree.column("rsim", width=80, anchor="center")
@@ -776,7 +776,7 @@ class App:
             else:
                 card.pack_forget()
             toggle.config(text=("▾" if opened else "▸") +
-                               " 🎨 Générer les images de test avec ComfyUI local (optionnel)",
+                               " 🎨 Generate test images with local ComfyUI (optional)",
                           command=lambda: set_open(not opened))
         toggle.pack(fill="x")
         set_open(bool(self.cfg.get("comfyui_eval_workflow")))
@@ -794,38 +794,38 @@ class App:
             return tk.Entry(parent, textvariable=var, font=FONT_MONO, width=width, bg=BG2,
                             fg=TEXT, insertbackground=TEXT, relief="flat")
 
-        Label(card, text="URL :", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=1, column=0, sticky="w")
+        Label(card, text="URL:", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=1, column=0, sticky="w")
         entry(card, self.comfy_url, 24).grid(row=1, column=1, sticky="w", padx=4, pady=2)
-        Label(card, text="Workflow (format API) :", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=1, column=2, sticky="e")
+        Label(card, text="Workflow (API format):", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=1, column=2, sticky="e")
         entry(card, self.comfy_wf, 34).grid(row=1, column=3, sticky="we", padx=4)
 
         def pick_wf():
-            f = filedialog.askopenfilename(title="Workflow ComfyUI exporté en format API",
+            f = filedialog.askopenfilename(title="ComfyUI workflow exported in API format",
                                            filetypes=[("Workflow API", "*.json")])
             if f:
                 self.comfy_wf.set(f)
         make_button(card, "📂", pick_wf).grid(row=1, column=4, sticky="w")
 
-        Label(card, text="LoRA :", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=2, column=0, sticky="w")
+        Label(card, text="LoRA:", font=FONT_SMALL, fg=TEXT, bg=CARD).grid(row=2, column=0, sticky="w")
         self.comfy_lora_combo = ttk.Combobox(card, textvariable=self.comfy_lora, width=34,
                                              state="readonly", font=FONT_SMALL)
         self.comfy_lora_combo.grid(row=2, column=1, columnspan=2, sticky="w", padx=4, pady=2)
-        make_button(card, "🔄 Lister", self._comfy_refresh_loras).grid(row=2, column=3, sticky="w")
+        make_button(card, "🔄 List", self._comfy_refresh_loras).grid(row=2, column=3, sticky="w")
 
         opts = Frame(card, bg=CARD)
         opts.grid(row=3, column=0, columnspan=6, sticky="w", pady=(2, 0))
-        Label(opts, text="Trigger :", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
+        Label(opts, text="Trigger:", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
         entry(opts, self.comfy_trigger, 12).pack(side="left", padx=(2, 10))
-        Label(opts, text="Images :", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
+        Label(opts, text="Images:", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
         tk.Spinbox(opts, from_=5, to=100, textvariable=self.comfy_n, width=4,
                    font=FONT_SMALL).pack(side="left", padx=(2, 10))
-        Label(opts, text="Force :", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
+        Label(opts, text="Strength:", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
         tk.Spinbox(opts, from_=0.1, to=2.0, increment=0.1, textvariable=self.comfy_strength,
                    width=4, font=FONT_SMALL).pack(side="left", padx=(2, 10))
-        tk.Checkbutton(opts, text="Baseline A/B (mêmes seeds, sans LoRA)",
+        tk.Checkbutton(opts, text="Baseline A/B (same seeds, no LoRA)",
                        variable=self.comfy_baseline, font=FONT_SMALL, fg=TEXT, bg=CARD,
                        selectcolor=BG2, activebackground=CARD).pack(side="left", padx=4)
-        self.comfy_gen_btn = Button(opts, text="🎨 Générer puis évaluer", font=FONT_BODY,
+        self.comfy_gen_btn = Button(opts, text="🎨 Generate then evaluate", font=FONT_BODY,
                                     bg=ACCENT, fg=BG, relief="flat", padx=10,
                                     command=self._run_comfy_generation)
         self.comfy_gen_btn.pack(side="left", padx=8)
@@ -834,21 +834,21 @@ class App:
         self.comfy_batch_filter = StringVar(value="")
         batch = Frame(card, bg=CARD)
         batch.grid(row=5, column=0, columnspan=6, sticky="w", pady=(4, 0))
-        Label(batch, text="📦 Lot — nom contient :", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
+        Label(batch, text="📦 Batch — name contains:", font=FONT_SMALL, fg=TEXT, bg=CARD).pack(side="left")
         entry(batch, self.comfy_batch_filter, 22).pack(side="left", padx=(4, 8))
-        self.comfy_batch_btn = Button(batch, text="📦 Tester le lot et classer", font=FONT_BODY,
+        self.comfy_batch_btn = Button(batch, text="📦 Test the batch and rank", font=FONT_BODY,
                                       bg=ACCENT2, fg=BG, relief="flat", padx=10,
                                       command=self._run_comfy_batch)
         self.comfy_batch_btn.pack(side="left")
-        self.comfy_cmp_btn = Button(batch, text="🖼 Comparer (1 image)", font=FONT_BODY,
+        self.comfy_cmp_btn = Button(batch, text="🖼 Compare (1 image)", font=FONT_BODY,
                                     bg=CARD_HI, fg=TEXT, relief="flat", padx=8,
                                     command=self._eval_quick_compare)
         self.comfy_cmp_btn.pack(side="left", padx=6)
-        Label(batch, text="  mêmes prompts + mêmes seeds pour tous, baseline commune",
+        Label(batch, text="  same prompts + same seeds for all, common baseline",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left")
-        Label(card, text="   Workflow : ComfyUI > Workflow > Export (API). Il doit contenir un node "
-                         "LoraLoader et un SaveImage ; mets {prompt} dans le texte positif "
-                         "(sinon il est détecté via le sampler).",
+        Label(card, text="   Workflow: ComfyUI > Workflow > Export (API). It must contain a "
+                         "LoraLoader node and a SaveImage node; put {prompt} in the positive "
+                         "text (otherwise it's detected via the sampler).",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD, wraplength=880,
               justify="left").grid(row=4, column=0, columnspan=6, sticky="w")
 
@@ -862,11 +862,11 @@ class App:
                     self.comfy_lora_combo.config(values=loras)
                     if loras and not self.comfy_lora.get():
                         self.comfy_lora.set(loras[0])
-                    self.eval_phase.config(text=f"✅ ComfyUI : {len(loras)} LoRA trouvés", fg=GREEN)
+                    self.eval_phase.config(text=f"✅ ComfyUI: {len(loras)} LoRA(s) found", fg=GREEN)
                 self.root.after(0, done)
             except Exception as e:
                 self.root.after(0, lambda e=e: self.eval_phase.config(
-                    text=f"❌ ComfyUI injoignable sur {url} ({e})", fg=RED))
+                    text=f"❌ Cannot reach ComfyUI at {url} ({e})", fg=RED))
         threading.Thread(target=worker, daemon=True).start()
 
     def _run_comfy_generation(self):
@@ -899,11 +899,11 @@ class App:
             def done():
                 self.comfy_gen_btn.config(state="normal")
                 if not r["lora"]:
-                    self.eval_phase.config(text="❌ Aucune image générée : " +
+                    self.eval_phase.config(text="❌ No image generated: " +
                                            " | ".join(r["errors"][:2]), fg=RED)
                     return
                 if r["errors"]:
-                    messagebox.showwarning("ComfyUI", f"{len(r['errors'])} génération(s) en échec :\n" +
+                    messagebox.showwarning("ComfyUI", f"{len(r['errors'])} failed generation(s):\n" +
                                            "\n".join(r["errors"][:5]))
                 self._run_evaluator()
             self.root.after(0, done)
@@ -915,21 +915,21 @@ class App:
         url = self.comfy_url.get().strip().rstrip("/")
         wf_path = self.comfy_wf.get().strip()
         if not Path(wf_path).is_file():
-            messagebox.showerror("Workflow", "Choisis le workflow ComfyUI exporté en format API.")
+            messagebox.showerror("Workflow", "Choose the ComfyUI workflow exported in API format.")
             return None
         if need_lora and not self.comfy_lora.get().strip():
-            messagebox.showerror("LoRA", "Clique « 🔄 Lister » puis choisis le LoRA à évaluer.")
+            messagebox.showerror("LoRA", "Click “🔄 List” then choose the LoRA to evaluate.")
             return None
         if not Path(self.eval_ref_path.get()).is_dir():
-            messagebox.showerror("Référence", "Renseigne d'abord le dossier de photos RÉELLES du sujet.")
+            messagebox.showerror("Reference", "First provide the folder of REAL subject photos.")
             return None
         try:
             info = cc.inspect_workflow(cc.load_api_workflow(wf_path))
         except Exception as e:
-            messagebox.showerror("Workflow invalide", str(e))
+            messagebox.showerror("Invalid workflow", str(e))
             return None
         if info["problems"]:
-            messagebox.showerror("Workflow inutilisable", "\n".join("• " + p for p in info["problems"]))
+            messagebox.showerror("Unusable workflow", "\n".join("• " + p for p in info["problems"]))
             return None
         self.cfg["comfyui_url"], self.cfg["comfyui_eval_workflow"] = url, wf_path
         try:
@@ -946,25 +946,25 @@ class App:
         url, wf_path = chk
         pattern = self.comfy_batch_filter.get().strip()
         if not pattern:
-            messagebox.showerror("Lot", "Tape une partie du nom commune aux LoRA à comparer (ex : lin).")
+            messagebox.showerror("Batch", "Type part of the name shared by the LoRAs to compare (e.g. lin).")
             return
         try:
             loras = cc.filter_loras(cc.list_loras(url), pattern)
         except Exception as e:
-            messagebox.showerror("ComfyUI", f"ComfyUI injoignable sur {url} :\n{e}")
+            messagebox.showerror("ComfyUI", f"Cannot reach ComfyUI at {url}:\n{e}")
             return
         if len(loras) < 2:
-            messagebox.showerror("Lot", f"{len(loras)} LoRA contient « {pattern} » : il en faut au moins 2 "
-                                        "pour un classement.")
+            messagebox.showerror("Batch", f"{len(loras)} LoRA(s) contain “{pattern}”: at least 2 are needed "
+                                        "for a ranking.")
             return
         n, base = self.comfy_n.get(), self.comfy_baseline.get()
         total = n * (len(loras) + (1 if base else 0))
         if not messagebox.askyesno(
-                "Tester le lot",
-                f"{len(loras)} LoRA :\n" + "\n".join("  • " + l for l in loras[:15]) +
+                "Test the batch",
+                f"{len(loras)} LoRA(s):\n" + "\n".join("  • " + l for l in loras[:15]) +
                 ("\n  …" if len(loras) > 15 else "") +
-                f"\n\n{total} générations au total ({n} par LoRA"
-                + (f" + {n} baseline" if base else "") + "). Lancer ?"):
+                f"\n\n{total} generations total ({n} per LoRA"
+                + (f" + {n} baseline" if base else "") + "). Proceed?"):
             return
         out = Path(self.eval_gen_path.get() or ".") / f"lot_{cc.safe_dir_name(pattern)}_{datetime.now():%Y%m%d_%H%M}"
         self.comfy_batch_btn.config(state="disabled")
@@ -991,7 +991,7 @@ class App:
                 if r.get("baseline_folder") and Path(r["baseline_folder"]).is_dir():
                     targets.append(("_baseline", r["baseline_folder"]))
                 for k, (name, folder) in enumerate(targets, 1):
-                    phase(f"🔬 Évaluation {k}/{len(targets)} — {name}", 70 + 30 * k / len(targets))
+                    phase(f"🔬 Evaluating {k}/{len(targets)} — {name}", 70 + 30 * k / len(targets))
                     results[name] = self._eval_run_once(folder, ref, "" if name == "_baseline" else train)
                 rows = cc.rank_batch(results)
                 (out / "classement.json").write_text(
@@ -1009,23 +1009,23 @@ class App:
         ok = [r for r in rows if "error" not in r]
         best = ok[0] if ok else None
         self.eval_phase.config(
-            text=(f"🏆 Meilleur : {best['lora']} ({best['grade']}, {best['score']}/100)" if best
-                  else "❌ Aucun LoRA évalué"), fg=GREEN if best else RED)
+            text=(f"🏆 Best: {best['lora']} ({best['grade']}, {best['score']}/100)" if best
+                  else "❌ No LoRA evaluated"), fg=GREEN if best else RED)
         win = tk.Toplevel(self.root)
-        win.title("Classement du lot")
+        win.title("Batch ranking")
         win.configure(bg=BG)
         win.geometry("980x460")
-        Label(win, text="🏆 Classement du lot (mêmes prompts, mêmes seeds)", font=FONT_H1,
+        Label(win, text="🏆 Batch ranking (same prompts, same seeds)", font=FONT_H1,
               fg=ACCENT2, bg=BG).pack(anchor="w", padx=15, pady=(12, 2))
-        Label(win, text="Tri : note du verdict (pénalise copycat et mode collapse), puis gain "
-                        "d'identité vs baseline sans LoRA. Le « meilleur » n'est pas forcément "
-                        "la dernière epoch : au-delà, le LoRA sur-apprend.",
+        Label(win, text="Sort: verdict score (penalizes copycat and mode collapse), then identity "
+                        "gain vs the no-LoRA baseline. The “best” isn't necessarily "
+                        "the last epoch: beyond a point, the LoRA overfits.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=940, justify="left").pack(anchor="w", padx=15)
         cols = ("rank", "grade", "score", "rsim", "gain", "std", "copycat")
         tree = ttk.Treeview(win, columns=cols, show="tree headings", height=14)
-        for c, t, w in (("#0", "LoRA", 360), ("rank", "#", 40), ("grade", "Note", 60),
+        for c, t, w in (("#0", "LoRA", 360), ("rank", "#", 40), ("grade", "Grade", 60),
                         ("score", "Score", 60), ("rsim", "R-FaceSim", 90), ("gain", "Gain vs base", 100),
-                        ("std", "Écart-type", 90), ("copycat", "Copycat", 70)):
+                        ("std", "Std dev", 90), ("copycat", "Copycat", 70)):
             tree.heading(c, text=t)
             tree.column(c, width=w, anchor="w" if c == "#0" else "center")
         tree.tag_configure("best", foreground=GREEN)
@@ -1042,9 +1042,9 @@ class App:
                                 fmt(r["gain"], "{:+.3f}"), fmt(r["r_facesim_std"]), r["copycat"]),
                         tags=(tag,))
         tree.pack(fill="both", expand=True, padx=15, pady=8)
-        foot = f"📁 Images + classement.json : {out}"
+        foot = f"📁 Images + classement.json: {out}"
         if errors:
-            foot += f"   ⚠️ {len(errors)} génération(s) en échec (voir classement.json)"
+            foot += f"   ⚠️ {len(errors)} failed generation(s) (see classement.json)"
         Label(win, text=foot, font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=940,
               justify="left").pack(anchor="w", padx=15, pady=(0, 10))
 
@@ -1054,15 +1054,15 @@ class App:
         train = self.eval_train_path.get().strip()
 
         if not Path(gen).is_dir():
-            messagebox.showerror("Erreur", f"Dossier images générées introuvable :\n{gen}")
+            messagebox.showerror("Error", f"Generated images folder not found:\n{gen}")
             return
         if not Path(ref).is_dir():
-            messagebox.showerror("Erreur",
-                f"Dossier photos référence introuvable :\n{ref}\n\n"
-                "Tu dois fournir des photos RÉELLES du sujet (≠ entraînement)")
+            messagebox.showerror("Error",
+                f"Reference photos folder not found:\n{ref}\n\n"
+                "You must provide REAL photos of the subject (not training photos)")
             return
 
-        self.eval_phase.config(text="⚙ Chargement insightface...", fg=ACCENT)
+        self.eval_phase.config(text="⚙ Loading insightface...", fg=ACCENT)
         self.eval_progress.config(value=0, mode="indeterminate")
         self.eval_progress.start(15)
         self.eval_tree.delete(*self.eval_tree.get_children())
@@ -1081,7 +1081,7 @@ class App:
             base_dir = Path(gen) / "_baseline"
             if "error" not in result and base_dir.is_dir() and any(base_dir.iterdir()):
                 self.root.after(0, lambda: self.eval_phase.config(
-                    text="⚙ Évaluation de la baseline (sans LoRA)...", fg=ACCENT))
+                    text="⚙ Evaluating the baseline (no LoRA)...", fg=ACCENT))
                 base = self._eval_run_once(str(base_dir), ref, "")
                 if "error" not in base:
                     lm = result.get("summary", {}).get("r_facesim_mean")
@@ -1092,7 +1092,7 @@ class App:
         except Exception as e:
             import traceback
             err = f"{e}\n\n{traceback.format_exc()[-500:]}"
-            self.root.after(0, lambda e=err: messagebox.showerror("Erreur évaluation", e))
+            self.root.after(0, lambda e=err: messagebox.showerror("Evaluation error", e))
 
     def _eval_run_once(self, gen, ref, train):
         """Lance lora_evaluator.py en subprocess et renvoie son dict resultat."""
@@ -1155,7 +1155,7 @@ class App:
         t_out.join(timeout=5); t_err.join(timeout=5)
 
         if killed:
-            return {"error": f"Aucune activité pendant {INACTIVITY_LIMIT//60} min — arrêté."}
+            return {"error": f"No activity for {INACTIVITY_LIMIT//60} min — stopped."}
 
         stdout = "".join(stdout_chunks)
         return json.loads(stdout.strip()) if stdout.strip() else {"error": "no output"}
@@ -1169,7 +1169,7 @@ class App:
 
         s = data.get("summary", {})
         v = s.get("verdict", {})
-        self.eval_phase.config(text=f"✅ Évaluation terminée — {s.get('n_generated', 0)} générées vs {s.get('n_reference', 0)} réfs",
+        self.eval_phase.config(text=f"✅ Evaluation done — {s.get('n_generated', 0)} generated vs {s.get('n_reference', 0)} refs",
                                  fg=GREEN)
 
         # Bloc verdict
@@ -1187,20 +1187,20 @@ class App:
               fg=color, bg=CARD).pack(side="left", padx=(0, 15))
         right = Frame(top, bg=CARD)
         right.pack(side="left", fill="x", expand=True)
-        Label(right, text=f"VERDICT LoRA : {desc}  ({score}/100)",
+        Label(right, text=f"LoRA VERDICT: {desc}  ({score}/100)",
               font=FONT_H1, fg=color, bg=CARD, anchor="w").pack(fill="x")
-        Label(right, text=f"R-FaceSim : moyenne {s.get('r_facesim_mean')} (std {s.get('r_facesim_std')}, min {s.get('r_facesim_min')}, max {s.get('r_facesim_max')})",
+        Label(right, text=f"R-FaceSim: mean {s.get('r_facesim_mean')} (std {s.get('r_facesim_std')}, min {s.get('r_facesim_min')}, max {s.get('r_facesim_max')})",
               font=FONT_BODY, fg=TEXT_DIM, bg=CARD, anchor="w").pack(fill="x")
         b = data.get("baseline")
         if b and b.get("gain") is not None:
             g = b["gain"]
             gcol = GREEN if g >= 0.15 else (YELLOW if g >= 0.05 else RED)
-            Label(right, text=(f"A/B ComfyUI : sans LoRA {b['r_facesim_mean']} → avec LoRA "
-                               f"{s.get('r_facesim_mean')}  = gain d'identité {g:+.3f}"
-                               + ("" if g >= 0.05 else "  ⚠️ le LoRA n'apporte quasi rien")),
+            Label(right, text=(f"ComfyUI A/B: without LoRA {b['r_facesim_mean']} → with LoRA "
+                               f"{s.get('r_facesim_mean')}  = identity gain {g:+.3f}"
+                               + ("" if g >= 0.05 else "  ⚠️ the LoRA adds almost nothing")),
                   font=FONT_BODY, fg=gcol, bg=CARD, anchor="w").pack(fill="x")
         if s.get("copycat_count", 0) > 0:
-            Label(right, text=f"❌ {s['copycat_count']} copycat detecté(s) (LoRA recopie au lieu de généraliser)",
+            Label(right, text=f"❌ {s['copycat_count']} copycat(s) detected (LoRA is copying instead of generalizing)",
                   font=FONT_BODY, fg=RED, bg=CARD, anchor="w").pack(fill="x")
 
         Label(self.eval_verdict_frame, text=f"💡 {advice}",
@@ -1214,11 +1214,11 @@ class App:
         # Black hole ranking
         bh = s.get("black_hole_top", [])
         if bh:
-            Label(self.eval_verdict_frame, text="🕳 Black Hole Ranking (training images les plus copiées) :",
+            Label(self.eval_verdict_frame, text="🕳 Black Hole Ranking (most-copied training images):",
                   font=FONT_H1, fg=ACCENT, bg=CARD, anchor="w").pack(fill="x", pady=(10, 4))
             for entry in bh[:5]:
                 Label(self.eval_verdict_frame,
-                      text=f"  • {entry['training_image']} attire {entry['attributed_count']} gens "
+                      text=f"  • {entry['training_image']} attracts {entry['attributed_count']} gen(s) "
                            f"({entry['ratio']*100:.0f}%)",
                       font=FONT_SMALL, fg=TEXT_DIM if entry['ratio'] < 0.3 else YELLOW,
                       bg=CARD, anchor="w").pack(fill="x")
@@ -1261,23 +1261,23 @@ class App:
     # =========================================================
     def _build_voice_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=20, pady=15)
-        parent.add(frame, text="  🎤 Voix RVC  ")
+        parent.add(frame, text="  🎤 RVC Voice  ")
 
-        Label(frame, text="🎤  Dataset Voix — Entraînement RVC (Applio)",
+        Label(frame, text="🎤  Voice Dataset — RVC Training (Applio)",
               font=FONT_TITLE, fg=TEXT, bg=BG).pack(anchor="w", pady=(0, 4))
         Label(frame,
-              text="Analyse tes fichiers audio pour l'entraînement RVC : qualité micro, SNR, durée, diversité.",
+              text="Analyze your audio files for RVC training: mic quality, SNR, duration, diversity.",
               font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(anchor="w", pady=(0, 10))
 
         # Sélection dossier
         sel = Frame(frame, bg=BG)
         sel.pack(fill="x", pady=4)
-        Label(sel, text="Dossier audio :", font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(side="left")
+        Label(sel, text="Audio folder:", font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(side="left")
         self.voice_folder = StringVar()
         Entry(sel, textvariable=self.voice_folder, font=FONT_MONO, bg=BG2, fg=TEXT,
               relief="flat", width=55).pack(side="left", padx=8)
         make_button(sel, "📂", lambda: self._pick_folder(self.voice_folder), width=4).pack(side="left")
-        make_button(sel, "🔍 Analyser", self._run_voice_analysis, primary=True, width=12).pack(side="left", padx=8)
+        make_button(sel, "🔍 Analyze", self._run_voice_analysis, primary=True, width=12).pack(side="left", padx=8)
 
         # Barre de progression
         self.voice_progress_var = StringVar(value="")
@@ -1291,12 +1291,13 @@ class App:
         # Colonne gauche : liste fichiers
         left = Frame(pane, bg=BG)
         left.pack(side="left", fill="both", expand=True)
-        Label(left, text="Fichiers analysés", font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w")
+        Label(left, text="Analyzed files", font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w")
         cols = ("fichier", "durée", "SNR", "RMS", "SR", "note", "problèmes")
+        col_labels = {"fichier": "File", "durée": "Duration", "note": "Grade", "problèmes": "Issues"}
         self.voice_tree = ttk.Treeview(left, columns=cols, show="headings",
                                         style="Dark.Treeview", height=14)
         for c, w in zip(cols, (200, 65, 65, 65, 75, 50, 280)):
-            self.voice_tree.heading(c, text=c); self.voice_tree.column(c, width=w, anchor="center")
+            self.voice_tree.heading(c, text=col_labels.get(c, c)); self.voice_tree.column(c, width=w, anchor="center")
         self.voice_tree.column("fichier", anchor="w"); self.voice_tree.column("problèmes", anchor="w")
         self.voice_tree.pack(fill="both", expand=True)
 
@@ -1304,7 +1305,7 @@ class App:
         right = Frame(pane, bg=CARD, padx=12, pady=10, width=280)
         right.pack(side="right", fill="y", padx=(12, 0))
         right.pack_propagate(False)
-        Label(right, text="Résumé", font=FONT_H1, fg=ACCENT, bg=CARD).pack(anchor="w")
+        Label(right, text="Summary", font=FONT_H1, fg=ACCENT, bg=CARD).pack(anchor="w")
         self.voice_summary_text = Text(right, bg=CARD, fg=TEXT, font=FONT_SMALL,
                                         relief="flat", wrap="word", state="disabled", height=18)
         self.voice_summary_text.pack(fill="both", expand=True)
@@ -1312,24 +1313,24 @@ class App:
         # Actions
         act = Frame(frame, bg=BG)
         act.pack(fill="x", pady=(6, 0))
-        make_button(act, "🚀 Ouvrir Applio", self._open_applio, width=16).pack(side="left", padx=4)
-        Label(act, text="→ Entraîne ton modèle vocal RVC dans Applio",
+        make_button(act, "🚀 Open Applio", self._open_applio, width=16).pack(side="left", padx=4)
+        Label(act, text="→ Train your RVC voice model in Applio",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(side="left")
 
     def _pick_folder(self, var):
         from tkinter import filedialog
-        f = filedialog.askdirectory(title="Choisir un dossier")
+        f = filedialog.askdirectory(title="Choose a folder")
         if f:
             var.set(f.replace("/", "\\"))
 
     def _run_voice_analysis(self):
         folder = self.voice_folder.get().strip()
         if not folder or not os.path.isdir(folder):
-            messagebox.showwarning("Dossier", "Choisis un dossier audio valide.")
+            messagebox.showwarning("Folder", "Choose a valid audio folder.")
             return
         self.voice_tree.delete(*self.voice_tree.get_children())
-        self._set_voice_summary("⏳ Analyse en cours…")
-        self.voice_progress_var.set("Démarrage…")
+        self._set_voice_summary("⏳ Analyzing…")
+        self.voice_progress_var.set("Starting…")
 
         def run():
             try:
@@ -1356,27 +1357,27 @@ class App:
                 summary = analyze_voice_folder(folder, on_progress, on_result)
                 self.root.after(0, lambda: self._show_voice_summary(summary))
                 self.root.after(0, lambda: self.voice_progress_var.set(
-                    f"✅ {summary['total']} fichiers analysés"))
+                    f"✅ {summary['total']} file(s) analyzed"))
             except ImportError as e:
                 self.root.after(0, lambda e=e: self._set_voice_summary(
-                    f"❌ Module manquant : {e}\n\nInstalle : pip install librosa soundfile"))
+                    f"❌ Missing module: {e}\n\nInstall: pip install librosa soundfile"))
 
         threading.Thread(target=run, daemon=True).start()
 
     def _show_voice_summary(self, s):
         gc = s.get("grade_counts", {})
         txt = (
-            f"📁 Fichiers : {s['total']}\n"
-            f"⏱ Durée totale : {s['total_duration_min']} min\n"
-            f"⌛ Durée moy. : {s['avg_duration_s']} s\n\n"
-            f"Notes :\n"
-            + "".join(f"  {g} : {gc.get(g,0)}\n" for g in "ABCDF")
-            + f"\n🎯 Score global : {s['overall_score']}\n"
-            + ("✅ Prêt pour Applio\n" if s.get('rvc_ready') else "⚠️ Corrige les problèmes d'abord\n")
-            + f"\n📋 Taux d'éch. : {', '.join(str(x) for x in s.get('sample_rates', []))}\n\n"
-            + "⚠️ Problèmes fréquents :\n"
+            f"📁 Files: {s['total']}\n"
+            f"⏱ Total duration: {s['total_duration_min']} min\n"
+            f"⌛ Avg. duration: {s['avg_duration_s']} s\n\n"
+            f"Grades:\n"
+            + "".join(f"  {g}: {gc.get(g,0)}\n" for g in "ABCDF")
+            + f"\n🎯 Overall score: {s['overall_score']}\n"
+            + ("✅ Ready for Applio\n" if s.get('rvc_ready') else "⚠️ Fix the issues first\n")
+            + f"\n📋 Sample rates: {', '.join(str(x) for x in s.get('sample_rates', []))}\n\n"
+            + "⚠️ Common issues:\n"
             + "\n".join(f"  • {i['issue']} ({i['count']}×)" for i in s.get('top_issues', []))
-            + f"\n\n💡 Recommandation :\n{s.get('recommendation', '')}"
+            + f"\n\n💡 Recommendation:\n{s.get('recommendation', '')}"
         )
         self._set_voice_summary(txt)
 
@@ -1391,36 +1392,36 @@ class App:
         if os.path.exists(bat):
             subprocess.Popen(["cmd", "/c", "start", "", bat], shell=False)
         else:
-            messagebox.showinfo("Applio", f"Applio introuvable :\n{bat}")
+            messagebox.showinfo("Applio", f"Applio not found:\n{bat}")
 
     # =========================================================
     # ONGLET MUSIQUE — Dataset ACE-Step 1.5 LoRA
     # =========================================================
     def _build_music_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=20, pady=15)
-        parent.add(frame, text="  🎵 Musique LoRA  ")
+        parent.add(frame, text="  🎵 Music LoRA  ")
 
-        Label(frame, text="🎵  Dataset Musical — LoRA ACE-Step 1.5",
+        Label(frame, text="🎵  Music Dataset — ACE-Step 1.5 LoRA",
               font=FONT_TITLE, fg=TEXT, bg=BG).pack(anchor="w", pady=(0, 4))
         Label(frame,
-              text="Prépare tes morceaux pour l'entraînement d'un LoRA musical ACE-Step 1.5 (style, artiste…)",
+              text="Prepare your tracks for training an ACE-Step 1.5 music LoRA (style, artist…)",
               font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(anchor="w", pady=(0, 10))
 
         # Sélection dossier
         sel = Frame(frame, bg=BG)
         sel.pack(fill="x", pady=4)
-        Label(sel, text="Dossier morceaux :", font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(side="left")
+        Label(sel, text="Tracks folder:", font=FONT_BODY, fg=TEXT_DIM, bg=BG).pack(side="left")
         self.music_folder = StringVar()
         Entry(sel, textvariable=self.music_folder, font=FONT_MONO, bg=BG2, fg=TEXT,
               relief="flat", width=50).pack(side="left", padx=8)
         make_button(sel, "📂", lambda: self._pick_folder(self.music_folder), width=4).pack(side="left")
-        make_button(sel, "🔍 Analyser", self._run_music_analysis, primary=True, width=12).pack(side="left", padx=8)
-        make_button(sel, "📝 Générer JSON", self._generate_music_json, width=14).pack(side="left", padx=4)
+        make_button(sel, "🔍 Analyze", self._run_music_analysis, primary=True, width=12).pack(side="left", padx=8)
+        make_button(sel, "📝 Generate JSON", self._generate_music_json, width=14).pack(side="left", padx=4)
 
         # Info format
         info = Frame(frame, bg=BG2, padx=10, pady=6)
         info.pack(fill="x", pady=(0, 6))
-        Label(info, text="📋 Format ACE-Step attendu : song.mp3 + song.lyrics.txt + song.json {bpm, keyscale, caption, timesignature, language}",
+        Label(info, text="📋 Expected ACE-Step format: song.mp3 + song.lyrics.txt + song.json {bpm, keyscale, caption, timesignature, language}",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG2, anchor="w").pack(fill="x")
 
         # Barre de progression
@@ -1434,19 +1435,21 @@ class App:
 
         left = Frame(pane, bg=BG)
         left.pack(side="left", fill="both", expand=True)
-        Label(left, text="Morceaux analysés", font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w")
+        Label(left, text="Analyzed tracks", font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w")
         cols = ("fichier", "durée", "paroles", "json", "BPM", "clé", "note", "problèmes")
+        music_col_labels = {"fichier": "File", "durée": "Duration", "paroles": "Lyrics",
+                             "clé": "Key", "note": "Grade", "problèmes": "Issues"}
         self.music_tree = ttk.Treeview(left, columns=cols, show="headings",
                                         style="Dark.Treeview", height=14)
         for c, w in zip(cols, (180, 65, 60, 50, 60, 90, 50, 240)):
-            self.music_tree.heading(c, text=c); self.music_tree.column(c, width=w, anchor="center")
+            self.music_tree.heading(c, text=music_col_labels.get(c, c)); self.music_tree.column(c, width=w, anchor="center")
         self.music_tree.column("fichier", anchor="w"); self.music_tree.column("problèmes", anchor="w")
         self.music_tree.pack(fill="both", expand=True)
 
         right = Frame(pane, bg=CARD, padx=12, pady=10, width=280)
         right.pack(side="right", fill="y", padx=(12, 0))
         right.pack_propagate(False)
-        Label(right, text="Résumé", font=FONT_H1, fg=ACCENT, bg=CARD).pack(anchor="w")
+        Label(right, text="Summary", font=FONT_H1, fg=ACCENT, bg=CARD).pack(anchor="w")
         self.music_summary_text = Text(right, bg=CARD, fg=TEXT, font=FONT_SMALL,
                                         relief="flat", wrap="word", state="disabled", height=18)
         self.music_summary_text.pack(fill="both", expand=True)
@@ -1454,18 +1457,18 @@ class App:
         # Actions
         act = Frame(frame, bg=BG)
         act.pack(fill="x", pady=(4, 0))
-        make_button(act, "🚀 Ouvrir ACE-Step", self._open_ace_step, width=18).pack(side="left", padx=4)
-        Label(act, text="→ Lance ACE-Step 1.5 UI → onglet LoRA Training",
+        make_button(act, "🚀 Open ACE-Step", self._open_ace_step, width=18).pack(side="left", padx=4)
+        Label(act, text="→ Launch the ACE-Step 1.5 UI → LoRA Training tab",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(side="left")
 
     def _run_music_analysis(self):
         folder = self.music_folder.get().strip()
         if not folder or not os.path.isdir(folder):
-            messagebox.showwarning("Dossier", "Choisis un dossier audio valide.")
+            messagebox.showwarning("Folder", "Choose a valid audio folder.")
             return
         self.music_tree.delete(*self.music_tree.get_children())
-        self._set_music_summary("⏳ Analyse en cours…")
-        self.music_progress_var.set("Démarrage…")
+        self._set_music_summary("⏳ Analyzing…")
+        self.music_progress_var.set("Starting…")
 
         def run():
             try:
@@ -1493,52 +1496,52 @@ class App:
                 summary = analyze_music_folder(folder, on_progress, on_result)
                 self.root.after(0, lambda: self._show_music_summary(summary))
                 self.root.after(0, lambda: self.music_progress_var.set(
-                    f"✅ {summary['total']} morceaux analysés"))
+                    f"✅ {summary['total']} track(s) analyzed"))
             except ImportError as e:
                 self.root.after(0, lambda e=e: self._set_music_summary(
-                    f"❌ Module manquant : {e}\n\nInstalle : pip install librosa soundfile mutagen"))
+                    f"❌ Missing module: {e}\n\nInstall: pip install librosa soundfile mutagen"))
 
         threading.Thread(target=run, daemon=True).start()
 
     def _generate_music_json(self):
         folder = self.music_folder.get().strip()
         if not folder or not os.path.isdir(folder):
-            messagebox.showwarning("Dossier", "Choisis un dossier audio valide.")
+            messagebox.showwarning("Folder", "Choose a valid audio folder.")
             return
         try:
             from analyze_music import prepare_dataset
             generated = prepare_dataset(folder, generate_missing_json=True)
             if generated:
-                messagebox.showinfo("JSON générés",
-                    f"✅ {len(generated)} fichiers .json créés.\n\nRemplis les champs bpm, keyscale et caption avant l'entraînement.\n\nPremier fichier : {generated[0]}")
+                messagebox.showinfo("JSON generated",
+                    f"✅ {len(generated)} .json file(s) created.\n\nFill in the bpm, keyscale and caption fields before training.\n\nFirst file: {generated[0]}")
             else:
-                messagebox.showinfo("JSON", "Tous les morceaux ont déjà un .json.")
+                messagebox.showinfo("JSON", "All tracks already have a .json.")
         except Exception as e:
-            messagebox.showerror("Erreur", str(e))
+            messagebox.showerror("Error", str(e))
 
     def _show_music_summary(self, s):
         gc = s.get("grade_counts", {})
         bpm_r = s.get("bpm_range")
         keys = s.get("unique_keys", [])
         txt = (
-            f"📁 Morceaux : {s['total']}\n"
-            f"⏱ Durée totale : {s['total_duration_min']} min\n"
-            f"⌛ Durée moy. : {s['avg_duration_s']} s\n\n"
-            f"Notes :\n"
-            + "".join(f"  {g} : {gc.get(g,0)}\n" for g in "ABCDF")
-            + f"\n🎯 Score global : {s['overall_score']}\n"
-            + ("✅ Prêt pour ACE-Step\n" if s.get('ace_step_ready') else "⚠️ Corrige les problèmes\n")
-            + f"\n📊 Diversité :\n"
-            f"  BPM : {bpm_r[0]}–{bpm_r[1]}" if bpm_r else "  BPM : non renseigné"
+            f"📁 Tracks: {s['total']}\n"
+            f"⏱ Total duration: {s['total_duration_min']} min\n"
+            f"⌛ Avg. duration: {s['avg_duration_s']} s\n\n"
+            f"Grades:\n"
+            + "".join(f"  {g}: {gc.get(g,0)}\n" for g in "ABCDF")
+            + f"\n🎯 Overall score: {s['overall_score']}\n"
+            + ("✅ Ready for ACE-Step\n" if s.get('ace_step_ready') else "⚠️ Fix the issues\n")
+            + f"\n📊 Diversity:\n"
+            f"  BPM: {bpm_r[0]}–{bpm_r[1]}" if bpm_r else "  BPM: not provided"
         )
         if keys:
-            txt += f"\n  Tonalités ({len(keys)}) : {', '.join(keys[:6])}"
+            txt += f"\n  Keys ({len(keys)}): {', '.join(keys[:6])}"
             if len(keys) > 6:
                 txt += f"…+{len(keys)-6}"
         txt += (
-            f"\n\n⚠️ Problèmes fréquents :\n"
+            f"\n\n⚠️ Common issues:\n"
             + "\n".join(f"  • {i['issue']} ({i['count']}×)" for i in s.get('top_issues', []))
-            + f"\n\n💡 Recommandation :\n{s.get('recommendation', '')}"
+            + f"\n\n💡 Recommendation:\n{s.get('recommendation', '')}"
         )
         self._set_music_summary(txt)
 
@@ -1553,7 +1556,7 @@ class App:
         if os.path.exists(bat):
             subprocess.Popen(["cmd", "/c", "start", "", bat], shell=False)
         else:
-            messagebox.showinfo("ACE-Step", f"ACE-Step introuvable :\n{bat}")
+            messagebox.showinfo("ACE-Step", f"ACE-Step not found:\n{bat}")
 
     def _build_config_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=20, pady=20)
@@ -1561,16 +1564,16 @@ class App:
 
         Label(frame, text="Configuration",
               font=FONT_H1, fg=TEXT, bg=BG).pack(anchor="w", pady=(0, 5))
-        Label(frame, text="Adapte selon ton install. Sauvegardé dans config.json.",
+        Label(frame, text="Adjust to match your install. Saved to config.json.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", pady=(0, 20))
 
         self.entries = {}
         # key : (icon, label, desc, picker_type)  picker_type = "file" | "dir"
         labels = {
-            "comfyui_python": ("🐍", "Python ComfyUI",
-                                "python.exe de ComfyUI (a insightface + torch CUDA)", "file"),
-            "datasets_dir":   ("📂", "Dossier datasets par défaut",
-                                "Pré-rempli dans l'analyseur", "dir"),
+            "comfyui_python": ("🐍", "ComfyUI Python",
+                                "ComfyUI's python.exe (has insightface + torch CUDA)", "file"),
+            "datasets_dir":   ("📂", "Default datasets folder",
+                                "Pre-filled in the analyzer", "dir"),
             "insightface_root": ("🧩", "Insightface models folder (antelopev2)",
                                 "Leave empty to auto-detect (env var LDC_INSIGHTFACE_ROOT or ~/.insightface)", "dir"),
         }
@@ -1603,16 +1606,16 @@ class App:
         dev_top = Frame(dev_card, bg=CARD)
         dev_top.pack(fill="x")
         Label(dev_top, text="⚡", font=FONT_EMOJI, fg=ACCENT2, bg=CARD).pack(side="left", padx=(0, 10))
-        Label(dev_top, text="Calcul (device)", font=FONT_H1, fg=TEXT, bg=CARD).pack(side="left")
-        Label(dev_top, text="auto = GPU si dispo (recommandé)",
+        Label(dev_top, text="Compute (device)", font=FONT_H1, fg=TEXT, bg=CARD).pack(side="left")
+        Label(dev_top, text="auto = GPU if available (recommended)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=10)
 
         dev_row = Frame(dev_card, bg=CARD)
         dev_row.pack(fill="x", pady=(8, 0))
         self.device_var = StringVar(value=self.cfg.get("device", "auto"))
-        for val, lbl in (("auto", "Auto (GPU si dispo)"),
-                          ("cuda", "Forcer GPU (CUDA)"),
-                          ("cpu", "Forcer CPU")):
+        for val, lbl in (("auto", "Auto (GPU if available)"),
+                          ("cuda", "Force GPU (CUDA)"),
+                          ("cpu", "Force CPU")):
             tk.Radiobutton(dev_row, text=lbl, variable=self.device_var, value=val,
                             font=FONT_BODY, fg=TEXT, bg=CARD, selectcolor=BG2,
                             activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=10)
@@ -1620,11 +1623,11 @@ class App:
 
         btn_row = Frame(frame, bg=BG)
         btn_row.pack(pady=25)
-        make_button(btn_row, "💾 Enregistrer", self._save_cfg, primary=True).pack(side="left", padx=5)
-        make_button(btn_row, "↺ Reset defauts", self._reset_cfg).pack(side="left", padx=5)
+        make_button(btn_row, "💾 Save", self._save_cfg, primary=True).pack(side="left", padx=5)
+        make_button(btn_row, "↺ Reset defaults", self._reset_cfg).pack(side="left", padx=5)
 
         # ===== Section MAJ logiciel =====
-        Label(frame, text="Mise à jour du logiciel",
+        Label(frame, text="Software update",
               font=FONT_H1, fg=TEXT, bg=BG).pack(anchor="w", pady=(30, 5))
         upd_card = Frame(frame, bg=CARD, padx=14, pady=12)
         upd_card.pack(fill="x", pady=4)
@@ -1639,7 +1642,7 @@ class App:
 
         ver_row = Frame(upd_card, bg=CARD)
         ver_row.pack(fill="x")
-        Label(ver_row, text=f"📦 Version locale : {current_v}",
+        Label(ver_row, text=f"📦 Local version: {current_v}",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         Label(ver_row, text="  ·  github.com/akalavol/LoRA-Dataset-Coach",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left")
@@ -1661,9 +1664,9 @@ class App:
 
         upd_btn_row = Frame(upd_card, bg=CARD)
         upd_btn_row.pack(fill="x", pady=(8, 0))
-        make_button(upd_btn_row, "🔄 Vérifier maintenant",
+        make_button(upd_btn_row, "🔄 Check now",
                      self._check_for_updates, primary=True).pack(side="left", padx=5)
-        self.upd_apply_btn = Button(upd_btn_row, text="⬇ Installer la mise à jour",
+        self.upd_apply_btn = Button(upd_btn_row, text="⬇ Install update",
                                       font=FONT_BODY, bg=CARD_HI, fg=TEXT_DIM,
                                       relief="flat", padx=12, pady=6,
                                       state="disabled", cursor="hand2",
@@ -1671,9 +1674,9 @@ class App:
         self.upd_apply_btn.pack(side="left", padx=5)
 
         # ===== Section CHANGELOG (Journal des nouveautés) =====
-        Label(frame, text="Journal des nouveautés",
+        Label(frame, text="Changelog",
               font=FONT_H1, fg=TEXT, bg=BG).pack(anchor="w", pady=(25, 5))
-        Label(frame, text="Toutes les modifications, ajouts et corrections de chaque version.",
+        Label(frame, text="All the changes, additions and fixes for each version.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", pady=(0, 8))
 
         chg_card = Frame(frame, bg=CARD, padx=14, pady=12)
@@ -1683,9 +1686,9 @@ class App:
         chg_header.pack(fill="x", pady=(0, 6))
         Label(chg_header, text="📋 CHANGELOG.md", font=FONT_BODY,
               fg=ACCENT2, bg=CARD).pack(side="left")
-        make_button(chg_header, "🔄 Recharger",
+        make_button(chg_header, "🔄 Reload",
                      self._load_changelog).pack(side="right", padx=4)
-        make_button(chg_header, "🌐 Voir sur GitHub",
+        make_button(chg_header, "🌐 View on GitHub",
                      lambda: self._open_url(
                          "https://github.com/akalavol/LoRA-Dataset-Coach/blob/main/CHANGELOG.md"
                      )).pack(side="right", padx=4)
@@ -1719,7 +1722,7 @@ class App:
         self._load_changelog()
 
     def _check_for_updates(self):
-        self.upd_status.config(text="🔍 Vérification en cours…", fg=TEXT_DIM)
+        self.upd_status.config(text="🔍 Checking…", fg=TEXT_DIM)
         self.upd_apply_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM)
         def worker():
             try:
@@ -1728,7 +1731,7 @@ class App:
                 self.root.after(0, lambda: self._on_update_check_done(info))
             except Exception as e:
                 self.root.after(0, lambda e=e: self.upd_status.config(
-                    text=f"❌ Erreur : {e}", fg=RED))
+                    text=f"❌ Error: {e}", fg=RED))
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_update_check_done(self, info):
@@ -1740,28 +1743,28 @@ class App:
         if info.get("update_available"):
             notes = (info.get("notes") or "")[:300]
             self.upd_status.config(
-                text=f"✅ Nouvelle version disponible : {latest} (tu as {current})\n\n"
-                     f"Notes :\n{notes}",
+                text=f"✅ New version available: {latest} (you have {current})\n\n"
+                     f"Notes:\n{notes}",
                 fg=GREEN)
             self.upd_apply_btn.config(state="normal", bg=GREEN, fg=BG)
             self._pending_update_info = info
         else:
             self.upd_status.config(
-                text=f"✅ Tu es à jour ({current}).", fg=GREEN)
+                text=f"✅ You're up to date ({current}).", fg=GREEN)
 
     def _apply_update(self):
         info = getattr(self, "_pending_update_info", None)
         if not info:
             return
         is_git = info.get("is_git_install")
-        msg = (f"Installer {info['latest']} ?\n\n"
-               f"Méthode : {'git pull (recommandé)' if is_git else 'Téléchargement zip + remplacement'}\n"
-               f"Un backup des .py actuels sera créé dans _backup_before_update/\n\n"
-               f"Le logiciel devra être redémarré après.")
-        if not messagebox.askyesno("Confirmer la mise à jour", msg):
+        msg = (f"Install {info['latest']}?\n\n"
+               f"Method: {'git pull (recommended)' if is_git else 'Download zip + replace'}\n"
+               f"A backup of the current .py files will be created in _backup_before_update/\n\n"
+               f"The app will need to be restarted afterward.")
+        if not messagebox.askyesno("Confirm update", msg):
             return
 
-        self.upd_status.config(text="⏳ Mise à jour en cours…", fg=ACCENT)
+        self.upd_status.config(text="⏳ Updating…", fg=ACCENT)
         self.upd_apply_btn.config(state="disabled")
         def worker():
             try:
@@ -1773,17 +1776,17 @@ class App:
                 self.root.after(0, lambda: self._on_update_applied(result))
             except Exception as e:
                 self.root.after(0, lambda e=e: self.upd_status.config(
-                    text=f"❌ Erreur : {e}", fg=RED))
+                    text=f"❌ Error: {e}", fg=RED))
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_update_applied(self, result):
         if result.get("success"):
             self.upd_status.config(
                 text=f"✅ {result['message']}\n\n"
-                     f"➜ Ferme l'application et relance run.bat pour activer la nouvelle version.",
+                     f"➜ Close the app and relaunch run.bat to activate the new version.",
                 fg=GREEN)
-            messagebox.showinfo("Mise à jour OK",
-                                  "Mise à jour appliquée. Ferme et relance l'application.")
+            messagebox.showinfo("Update OK",
+                                  "Update applied. Close and relaunch the app.")
             # Auto-refresh changelog après update réussi
             try:
                 self._load_changelog()
@@ -1798,7 +1801,7 @@ class App:
             import webbrowser
             webbrowser.open(url)
         except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible d'ouvrir l'URL :\n{e}")
+            messagebox.showerror("Error", f"Cannot open the URL:\n{e}")
 
     def _load_changelog(self):
         """Charge CHANGELOG.md depuis le disque local, fallback sur GitHub."""
@@ -1819,8 +1822,8 @@ class App:
                 with urllib.request.urlopen(url, timeout=8) as resp:
                     content = resp.read().decode("utf-8")
             except Exception as e:
-                content = f"Impossible de charger CHANGELOG.md :\n{e}\n\n" \
-                           f"Visite directement le repo GitHub."
+                content = f"Could not load CHANGELOG.md:\n{e}\n\n" \
+                           f"Visit the GitHub repo directly."
 
         # Rendu markdown basique avec coloration
         self.changelog_text.config(state="normal")
@@ -1843,25 +1846,25 @@ class App:
     # ============================================================
     def _build_analyzer_tab(self, parent):
         frame = Frame(parent, bg=BG, padx=15, pady=12)
-        parent.add(frame, text="  📊 Analyseur dataset  ")
+        parent.add(frame, text="  📊 Dataset Analyzer  ")
 
-        Label(frame, text="Analyseur de coherence dataset LoRA",
+        Label(frame, text="LoRA Dataset Coherence Analyzer",
               font=FONT_H1, fg=ACCENT2, bg=BG).pack(anchor="w")
-        Label(frame, text="Verifie qu'un dossier d'images est coherent pour entrainer un LoRA visage : "
-                          "meme personne, visages detectes, resolutions, etc.",
+        Label(frame, text="Checks whether a folder of images is coherent for training a face LoRA: "
+                          "same person, faces detected, resolutions, etc.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, wraplength=900, justify="left").pack(anchor="w", pady=(0, 10))
 
         # Selection dossier
         sel_frame = Frame(frame, bg=CARD, padx=10, pady=8)
         sel_frame.pack(fill="x", pady=4)
-        Label(sel_frame, text="📂 Dossier dataset :",
+        Label(sel_frame, text="📂 Dataset folder:",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.analyzer_path = StringVar(value=self.cfg.get("datasets_dir", r"C:\AI\datasets"))
         entry = tk.Entry(sel_frame, textvariable=self.analyzer_path, font=FONT_MONO,
                          bg=BG2, fg=TEXT, insertbackground=TEXT, relief="flat")
         entry.pack(side="left", fill="x", expand=True, ipady=5, padx=8)
         make_button(sel_frame, "📂", lambda: self._pick_folder(self.analyzer_path)).pack(side="left", padx=4)
-        make_button(sel_frame, "🔍 Analyser", self._run_analyzer, primary=True, width=14).pack(side="left", padx=4)
+        make_button(sel_frame, "🔍 Analyze", self._run_analyzer, primary=True, width=14).pack(side="left", padx=4)
         self.analyzer_export_btn = Button(sel_frame, text="📄 Export PDF", font=FONT_BODY,
                                            bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                            padx=10, pady=6, cursor="hand2",
@@ -1869,35 +1872,35 @@ class App:
                                            command=self._export_analyzer_pdf)
         self.analyzer_export_btn.pack(side="left", padx=4)
 
-        self.analyzer_move_btn = Button(sel_frame, text="🗑 Déplacer ratés", font=FONT_BODY,
+        self.analyzer_move_btn = Button(sel_frame, text="🗑 Move rejects", font=FONT_BODY,
                                          bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                          padx=10, pady=6, cursor="hand2",
                                          state="disabled",
                                          command=self._move_rejected_photos)
         self.analyzer_move_btn.pack(side="left", padx=4)
 
-        self.analyzer_upscale_btn = Button(sel_frame, text="🔧 Floues → upscale", font=FONT_BODY,
+        self.analyzer_upscale_btn = Button(sel_frame, text="🔧 Blurry → upscale", font=FONT_BODY,
                                             bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                             padx=10, pady=6, cursor="hand2",
                                             state="disabled",
                                             command=self._move_blurry_to_upscale)
         self.analyzer_upscale_btn.pack(side="left", padx=4)
 
-        self.analyzer_kohya_btn = Button(sel_frame, text="🧬 Préparer Kohya", font=FONT_BODY,
+        self.analyzer_kohya_btn = Button(sel_frame, text="🧬 Prepare Kohya", font=FONT_BODY,
                                           bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                           padx=10, pady=6, cursor="hand2",
                                           state="disabled",
                                           command=self._prepare_kohya)
         self.analyzer_kohya_btn.pack(side="left", padx=4)
 
-        self.analyzer_mask_btn = Button(sel_frame, text="🎭 Masques sujet", font=FONT_BODY,
+        self.analyzer_mask_btn = Button(sel_frame, text="🎭 Subject masks", font=FONT_BODY,
                                          bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                          padx=10, pady=6, cursor="hand2",
                                          state="disabled",
                                          command=self._generate_subject_masks)
         self.analyzer_mask_btn.pack(side="left", padx=4)
 
-        self.analyzer_gen_btn = Button(sel_frame, text="✨ Générer manques", font=FONT_BODY,
+        self.analyzer_gen_btn = Button(sel_frame, text="✨ Generate missing", font=FONT_BODY,
                                         bg=CARD_HI, fg=TEXT_DIM, relief="flat",
                                         padx=10, pady=6, cursor="hand2",
                                         state="disabled",
@@ -1907,7 +1910,7 @@ class App:
         # ===== Photo de reference (optionnelle) =====
         ref_frame = Frame(frame, bg=CARD, padx=10, pady=8)
         ref_frame.pack(fill="x", pady=4)
-        Label(ref_frame, text="📷 Référence(s) :",
+        Label(ref_frame, text="📷 Reference(s):",
               font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.analyzer_ref_path = StringVar(value="")
         ref_entry = tk.Entry(ref_frame, textvariable=self.analyzer_ref_path, font=FONT_MONO,
@@ -1917,25 +1920,25 @@ class App:
         make_button(ref_frame, "📁", self._pick_ref_folder).pack(side="left", padx=2)  # dossier de réfs
         make_button(ref_frame, "✕", lambda: (self.analyzer_ref_path.set(""),
                                               self._update_preview_ref(""))).pack(side="left", padx=2)
-        Label(ref_frame, text="(optionnel — 1 photo OU 📁 un dossier de 2-5 photos = identité robuste)",
+        Label(ref_frame, text="(optional — 1 photo OR 📁 a folder of 2-5 photos = more robust identity)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=8)
 
         # ===== Mode captioner =====
         cap_frame = Frame(frame, bg=CARD, padx=10, pady=6)
         cap_frame.pack(fill="x", pady=4)
-        Label(cap_frame, text="🏷 Captions :", font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
+        Label(cap_frame, text="🏷 Captions:", font=FONT_BODY, fg=TEXT, bg=CARD).pack(side="left")
         self.captioner_mode = StringVar(value="none")
         for val, lbl, tip in (
             ("none",       "None (analysis only)", "No captioning - fastest, nothing written to disk"),
-            ("wd14",       "WD14 tags",       "Tags booru SDXL/Kohya (~30 s, 330 Mo)"),
-            ("natural",    "Florence-2",      "Caption naturelle, rapide mais hallucine sur personnes"),
-            ("joycaption", "JoyCaption ⭐",   "Captions longues : FLUX.2/Qwen-Image/Z-Image/Wan/LTX-2 (lent, 4-8 Go)"),
-            ("all",        "Tous",            "WD14 + Florence + JoyCaption (très lent, exhaustif)"),
+            ("wd14",       "WD14 tags",       "Booru tags SDXL/Kohya (~30 s, 330 MB)"),
+            ("natural",    "Florence-2",      "Natural-language caption, fast but hallucinates on people"),
+            ("joycaption", "JoyCaption ⭐",   "Long captions: FLUX.2/Qwen-Image/Z-Image/Wan/LTX-2 (slow, 4-8 GB)"),
+            ("all",        "All",            "WD14 + Florence + JoyCaption (very slow, exhaustive)"),
         ):
             tk.Radiobutton(cap_frame, text=lbl, variable=self.captioner_mode, value=val,
                             font=FONT_BODY, fg=TEXT, bg=CARD, selectcolor=BG2,
                             activebackground=CARD, activeforeground=TEXT).pack(side="left", padx=6)
-        Label(cap_frame, text="(WD14 pour SDXL/Pony · JoyCaption pour tous les modèles 2025-26)",
+        Label(cap_frame, text="(WD14 for SDXL/Pony · JoyCaption for all 2025-26 models)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=8)
 
         # ===== Options caption / artefacts (ligne separee) =====
@@ -1962,7 +1965,7 @@ class App:
         progress_outer.pack(fill="x", pady=(8, 4))
 
         # Ligne 1 : phase en cours
-        self.analyzer_phase = Label(progress_outer, text="⏸ En attente",
+        self.analyzer_phase = Label(progress_outer, text="⏸ Waiting",
                                      font=FONT_BODY, fg=TEXT_DIM, bg=BG, anchor="w")
         self.analyzer_phase.pack(fill="x")
 
@@ -1995,7 +1998,7 @@ class App:
             # Image courante (gauche)
             self.preview_current_frame = Frame(preview_row, bg=CARD, padx=6, pady=6)
             self.preview_current_frame.pack(side="left")
-            Label(self.preview_current_frame, text="📷 En cours d'analyse",
+            Label(self.preview_current_frame, text="📷 Currently analyzing",
                   font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack()
             self.preview_current_label = Label(self.preview_current_frame, bg=CARD,
                                                 width=200, height=200)
@@ -2008,12 +2011,12 @@ class App:
             # Image de reference (droite, si une ref est definie)
             self.preview_ref_frame = Frame(preview_row, bg=CARD, padx=6, pady=6)
             self.preview_ref_frame.pack(side="left", padx=12)
-            Label(self.preview_ref_frame, text="📌 Référence",
+            Label(self.preview_ref_frame, text="📌 Reference",
                   font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack()
             self.preview_ref_label = Label(self.preview_ref_frame, bg=CARD,
                                             width=200, height=200)
             self.preview_ref_label.pack(pady=2)
-            self.preview_ref_name = Label(self.preview_ref_frame, text="(aucune)",
+            self.preview_ref_name = Label(self.preview_ref_frame, text="(none)",
                                            font=FONT_SMALL, fg=TEXT_DIM, bg=CARD,
                                            wraplength=200)
             self.preview_ref_name.pack()
@@ -2021,7 +2024,7 @@ class App:
             # Verdict live de la photo courante (a droite des 2 previews)
             self.preview_verdict_frame = Frame(preview_row, bg=CARD, padx=12, pady=6)
             self.preview_verdict_frame.pack(side="left", fill="both", expand=True, padx=4)
-            Label(self.preview_verdict_frame, text="🔎 Dernier verdict",
+            Label(self.preview_verdict_frame, text="🔎 Latest verdict",
                   font=FONT_SMALL, fg=TEXT_DIM, bg=CARD, anchor="w").pack(anchor="w")
             self.preview_verdict_text = Label(self.preview_verdict_frame, text="",
                                                font=FONT_BODY, fg=TEXT, bg=CARD,
@@ -2041,7 +2044,7 @@ class App:
         # pas pack maintenant - apparait apres analyse
 
         # Resume
-        self.analyzer_summary = Label(frame, text="(aucune analyse lancee)", font=FONT_BODY,
+        self.analyzer_summary = Label(frame, text="(no analysis run yet)", font=FONT_BODY,
                                        fg=TEXT_DIM, bg=BG, justify="left")
         self.analyzer_summary.pack(anchor="w", pady=8)
 
@@ -2052,16 +2055,16 @@ class App:
                                           columns=("res", "sharp", "face", "size", "yaw", "expr", "sim", "body", "qual", "lora"),
                                           show="tree headings", style="Dark.Treeview")
         self.analyzer_tree.heading("#0", text="Image")
-        self.analyzer_tree.heading("res", text="Resol.")
-        self.analyzer_tree.heading("sharp", text="Net.")
-        self.analyzer_tree.heading("face", text="Vis.")
-        self.analyzer_tree.heading("size", text="%vis.")
+        self.analyzer_tree.heading("res", text="Res.")
+        self.analyzer_tree.heading("sharp", text="Sharp.")
+        self.analyzer_tree.heading("face", text="Face")
+        self.analyzer_tree.heading("size", text="%face")
         self.analyzer_tree.heading("yaw", text="Pose°")
         self.analyzer_tree.heading("expr", text="Expression")
-        self.analyzer_tree.heading("sim", text="S.vis")
-        self.analyzer_tree.heading("body", text="S.cor")
-        self.analyzer_tree.heading("qual", text="Qualite")
-        self.analyzer_tree.heading("lora", text="🧬 LoRA - raison")
+        self.analyzer_tree.heading("sim", text="F.sim")
+        self.analyzer_tree.heading("body", text="B.sim")
+        self.analyzer_tree.heading("qual", text="Quality")
+        self.analyzer_tree.heading("lora", text="🧬 LoRA - reason")
         self.analyzer_tree.column("#0", width=160)
         self.analyzer_tree.column("res", width=75, anchor="center")
         self.analyzer_tree.column("sharp", width=50, anchor="e")
@@ -2092,11 +2095,11 @@ class App:
 
         err_header = Frame(self.analyzer_error_frame, bg="#3a1f24")
         err_header.pack(fill="x")
-        Label(err_header, text="❌ CRASH DETECTE", font=FONT_H1, fg=RED, bg="#3a1f24").pack(side="left")
-        Button(err_header, text="📋 Copier", font=FONT_SMALL,
+        Label(err_header, text="❌ CRASH DETECTED", font=FONT_H1, fg=RED, bg="#3a1f24").pack(side="left")
+        Button(err_header, text="📋 Copy", font=FONT_SMALL,
                bg=CARD_HI, fg=TEXT, relief="flat", padx=8, pady=2, cursor="hand2",
                command=self._copy_analyzer_error).pack(side="right", padx=4)
-        Button(err_header, text="✕ Fermer", font=FONT_SMALL,
+        Button(err_header, text="✕ Close", font=FONT_SMALL,
                bg=CARD_HI, fg=TEXT, relief="flat", padx=8, pady=2, cursor="hand2",
                command=lambda: self.analyzer_error_frame.pack_forget()).pack(side="right")
 
@@ -2114,19 +2117,19 @@ class App:
     def _run_analyzer(self):
         folder = self.analyzer_path.get()
         if not Path(folder).is_dir():
-            messagebox.showerror("Erreur", f"Dossier introuvable :\n{folder}")
+            messagebox.showerror("Error", f"Folder not found:\n{folder}")
             return
         if not Path(self.comfyui_py).exists():
-            messagebox.showerror("Erreur", f"Python ComfyUI-future introuvable :\n{self.comfyui_py}\n\n"
-                                            "L'analyseur a besoin d'insightface (installe dans ComfyUI-future).")
+            messagebox.showerror("Error", f"ComfyUI-future Python not found:\n{self.comfyui_py}\n\n"
+                                            "The analyzer needs insightface (installed in ComfyUI-future).")
             return
 
         # Référence(s) optionnelle(s) : 1 fichier OU un dossier de photos
         ref = self.analyzer_ref_path.get().strip()
         if ref and not (Path(ref).is_file() or Path(ref).is_dir()):
-            messagebox.showerror("Erreur", f"Référence introuvable :\n{ref}\n\n"
-                                            "Donne une photo OU un dossier de photos, "
-                                            "ou laisse vide.")
+            messagebox.showerror("Error", f"Reference not found:\n{ref}\n\n"
+                                            "Provide a photo OR a folder of photos, "
+                                            "or leave it empty.")
             return
         # Affiche la ref dans le preview (au cas ou elle a ete tapee manuellement)
         self._update_preview_ref(ref)
@@ -2148,17 +2151,17 @@ class App:
         # Avertissement si combinaison lente (JoyCaption sur CPU + beaucoup d'images)
         if cap_mode in ("joycaption", "all") and n_imgs >= 40:
             ok = messagebox.askyesno(
-                "Analyse potentiellement longue",
-                f"{n_imgs} images avec captions « {cap_mode} ».\n\n"
-                f"⚙ Bonne nouvelle : les captions naturelles (JoyCaption/Florence) "
-                f"ne sont générées QUE sur les photos jugées viables — les ratés "
-                f"(floues, mauvaise personne, duplicates) sont ignorés.\n\n"
-                f"JoyCaption reste LENT sur CPU (~2 min/image), rapide sur GPU "
-                f"(~30 s/image). Si beaucoup de photos sont viables, ça peut "
-                f"quand même être long sans GPU.\n\n"
-                f"💡 Astuce : règle le device sur GPU dans ⚙ Config si ce n'est "
-                f"pas déjà fait.\n\n"
-                f"Continuer ?"
+                "Potentially long analysis",
+                f"{n_imgs} images with “{cap_mode}” captions.\n\n"
+                f"⚙ Good news: natural-language captions (JoyCaption/Florence) "
+                f"are only generated for photos judged viable — rejects "
+                f"(blurry, wrong person, duplicates) are skipped.\n\n"
+                f"JoyCaption is still SLOW on CPU (~2 min/image), fast on GPU "
+                f"(~30 s/image). If many photos are viable, it can "
+                f"still take a while without a GPU.\n\n"
+                f"💡 Tip: set the device to GPU in ⚙ Config if you "
+                f"haven't already.\n\n"
+                f"Continue?"
             )
             if not ok:
                 return
@@ -2167,7 +2170,7 @@ class App:
         self.analyzer_summary.config(text="", fg=TEXT_DIM)
         self.analyzer_progress.config(value=0, mode="indeterminate")
         self.analyzer_progress.start(15)
-        self.analyzer_phase.config(text="⚙ Démarrage du moteur d'analyse…", fg=ACCENT)
+        self.analyzer_phase.config(text="⚙ Starting the analysis engine…", fg=ACCENT)
         self.analyzer_percent.config(text="")
         self.analyzer_eta.config(text="")
         self.analyzer_status.config(text="")
@@ -2176,7 +2179,7 @@ class App:
         self._analyzer_start_time = _time.time()
         self._analyzer_last_activity = _time.time()
         self._analyzer_total = 0
-        self._analyzer_phase_label = "Démarrage du moteur d'analyse"
+        self._analyzer_phase_label = "Starting the analysis engine"
         self._analyzer_running = True
         self._analyzer_stderr_buffer = []
         self.root.update_idletasks()
@@ -2205,16 +2208,16 @@ class App:
             since_activity = int(_time.time() - self._analyzer_last_activity)
             hint = ""
             if elapsed > 25:
-                hint = "  (1er lancement : téléchargement des modèles, peut prendre plusieurs minutes…)"
+                hint = "  (first run: downloading models, can take several minutes…)"
             self.analyzer_phase.config(
                 text=f"⚙ {self._analyzer_phase_label} — {elapsed_str}{hint}", fg=ACCENT)
             # Indicateur d'activité du sous-processus
             if since_activity > 3:
                 self.analyzer_status.config(
-                    text=f"⏳ travail en cours… (dernier signe d'activité il y a {since_activity}s)",
+                    text=f"⏳ working… (last activity {since_activity}s ago)",
                     fg=TEXT_DIM)
             else:
-                self.analyzer_status.config(text="⏳ chargement…", fg=TEXT_DIM)
+                self.analyzer_status.config(text="⏳ loading…", fg=TEXT_DIM)
         # Reprogramme
         self.root.after(1000, self._analyzer_tick)
 
@@ -2256,7 +2259,7 @@ class App:
                         self.root.after(0, lambda t=total: (
                             self.analyzer_progress.stop(),
                             self.analyzer_progress.config(mode="determinate", maximum=t, value=0),
-                            self.analyzer_phase.config(text=f"🔍 Analyse en cours — {t} images", fg=ACCENT),
+                            self.analyzer_phase.config(text=f"🔍 Analyzing — {t} images", fg=ACCENT),
                             self.analyzer_percent.config(text="0%"),
                             self.analyzer_eta.config(text="")
                         ))
@@ -2273,9 +2276,9 @@ class App:
                             if cur > 0 and elapsed > 1:
                                 rate = cur / elapsed
                                 remaining = (tot - cur) / rate if rate > 0 else 0
-                                eta_str = f"⏱ {fmt_eta(remaining)} restant"
+                                eta_str = f"⏱ {fmt_eta(remaining)} left"
                             else:
-                                eta_str = "⏱ calcul..."
+                                eta_str = "⏱ computing..."
                             self.root.after(0, lambda c=cur, t=tot, n=name, p=pct, e=eta_str: (
                                 self.analyzer_progress.config(value=c),
                                 self.analyzer_percent.config(text=f"{p:.0f}%"),
@@ -2302,7 +2305,7 @@ class App:
                         self.root.after(0, lambda m=msg: self.analyzer_phase.config(text=f"⚙ {m}", fg=ACCENT))
                     elif line.startswith("PROGRESS_DONE"):
                         self.root.after(0, lambda: (
-                            self.analyzer_phase.config(text="⚙ Calculs de similarite en cours...", fg=ACCENT),
+                            self.analyzer_phase.config(text="⚙ Computing similarity...", fg=ACCENT),
                             self.analyzer_status.config(text="")
                         ))
 
@@ -2346,8 +2349,8 @@ class App:
             if killed_for_inactivity:
                 full = "".join(self._analyzer_stderr_buffer)
                 self.root.after(0, lambda: self._analyzer_done_error(
-                    f"Aucune activité pendant {INACTIVITY_LIMIT//60} min — process arrêté. "
-                    f"Le modèle est peut-être resté bloqué au téléchargement.", full))
+                    f"No activity for {INACTIVITY_LIMIT//60} min — process stopped. "
+                    f"The model may be stuck downloading.", full))
                 return
 
             stdout_data = "".join(stdout_chunks)
@@ -2355,32 +2358,32 @@ class App:
             if proc.returncode not in (0, None):
                 full_stderr = "".join(self._analyzer_stderr_buffer)
                 self.root.after(0, lambda: self._analyzer_done_error(
-                    f"Le script Python a quitte avec le code {proc.returncode}", full_stderr))
+                    f"The Python script exited with code {proc.returncode}", full_stderr))
                 return
 
             try:
                 data = json.loads(stdout_data)
             except json.JSONDecodeError as e:
-                full = "".join(self._analyzer_stderr_buffer) + "\n\n--- STDOUT (debut) ---\n" + stdout_data[:3000]
+                full = "".join(self._analyzer_stderr_buffer) + "\n\n--- STDOUT (start) ---\n" + stdout_data[:3000]
                 self.root.after(0, lambda e=e, full=full: self._analyzer_done_error(
-                    f"Sortie JSON invalide : {e}", full))
+                    f"Invalid JSON output: {e}", full))
                 return
             if "error" in data:
-                full = "".join(self._analyzer_stderr_buffer) + "\n\n--- ERREUR ---\n" + str(data.get("error"))
+                full = "".join(self._analyzer_stderr_buffer) + "\n\n--- ERROR ---\n" + str(data.get("error"))
                 self.root.after(0, lambda: self._analyzer_done_error(str(data["error"]), full))
                 return
             self.root.after(0, lambda: self._show_analyzer_result(data))
         except Exception as e:
             import traceback
             self._analyzer_running = False
-            full = "".join(self._analyzer_stderr_buffer) + "\n\n--- TRACEBACK GUI ---\n" + traceback.format_exc()
+            full = "".join(self._analyzer_stderr_buffer) + "\n\n--- GUI TRACEBACK ---\n" + traceback.format_exc()
             self.root.after(0, lambda e=e, full=full: self._analyzer_done_error(str(e), full))
 
     def _analyzer_done_error(self, msg, full_details=""):
         self._analyzer_running = False  # stoppe le ticker
         self.analyzer_progress.stop()
         self.analyzer_progress.config(mode="determinate", value=0)
-        self.analyzer_phase.config(text=f"❌ Echec : {msg[:100]}", fg=RED)
+        self.analyzer_phase.config(text=f"❌ Failed: {msg[:100]}", fg=RED)
         self.analyzer_percent.config(text="")
         self.analyzer_eta.config(text="")
         self.analyzer_status.config(text="")
@@ -2397,13 +2400,13 @@ class App:
         if text:
             self.root.clipboard_clear()
             self.root.clipboard_append(text)
-            self.status_var.set("Erreur copiee dans le presse-papier")
+            self.status_var.set("Error copied to clipboard")
 
     def _export_analyzer_pdf(self):
         """Genere un PDF paysage A4 du compte rendu de la derniere analyse."""
         data = getattr(self, "_last_analysis_data", None)
         if not data:
-            messagebox.showinfo("Info", "Lance d'abord une analyse.")
+            messagebox.showinfo("Info", "Run an analysis first.")
             return
 
         # Nom par defaut base sur le dossier + date
@@ -2412,7 +2415,7 @@ class App:
         default_name = f"rapport_dataset_{_P(folder).name}_{datetime.now():%Y%m%d_%H%M}.pdf"
 
         out = filedialog.asksaveasfilename(
-            title="Enregistrer le rapport PDF",
+            title="Save the PDF report",
             initialfile=default_name,
             defaultextension=".pdf",
             filetypes=[("PDF", "*.pdf")]
@@ -2426,14 +2429,14 @@ class App:
             _sys.path.insert(0, str(_P(__file__).parent))
             import export_pdf
             export_pdf.export(data, folder, out)
-            self.status_var.set(f"PDF genere : {_P(out).name}")
+            self.status_var.set(f"PDF generated: {_P(out).name}")
             # Propose d'ouvrir
-            if messagebox.askyesno("PDF genere", f"Rapport sauve dans :\n{out}\n\nL'ouvrir maintenant ?"):
+            if messagebox.askyesno("PDF generated", f"Report saved to:\n{out}\n\nOpen it now?"):
                 os.startfile(out)
         except Exception as e:
             import traceback
-            messagebox.showerror("Erreur PDF",
-                f"Echec generation PDF :\n{e}\n\n{traceback.format_exc()[-400:]}")
+            messagebox.showerror("PDF error",
+                f"PDF generation failed:\n{e}\n\n{traceback.format_exc()[-400:]}")
 
     def _show_analyzer_result(self, data):
         import time as _time
@@ -2451,7 +2454,7 @@ class App:
         m, s = divmod(int(elapsed), 60)
         dur = f"{m}m{s:02d}s" if m else f"{s}s"
         n = data.get("summary", {}).get("total_images", 0)
-        self.analyzer_phase.config(text=f"✅ Analyse terminee — {n} images en {dur}", fg=GREEN)
+        self.analyzer_phase.config(text=f"✅ Analysis done — {n} images in {dur}", fg=GREEN)
         self.analyzer_percent.config(text="100%")
         self.analyzer_eta.config(text="")
         self.analyzer_status.config(text="")
@@ -2462,46 +2465,46 @@ class App:
         unusable = data.get("summary", {}).get("lora_unusable", 0)
         if unusable > 0:
             self.analyzer_move_btn.config(state="normal", bg=RED, fg=BG,
-                                          text=f"🗑 Déplacer ratés ({unusable})")
+                                          text=f"🗑 Move rejects ({unusable})")
         else:
             self.analyzer_move_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                          text="🗑 Aucun raté à déplacer")
+                                          text="🗑 No rejects to move")
 
         # Bouton upscale floues
         n_blurry = len(data.get("summary", {}).get("blurry_recoverable", []))
         if n_blurry > 0:
             self.analyzer_upscale_btn.config(state="normal", bg=YELLOW, fg=BG,
-                                              text=f"🔧 Floues → upscale ({n_blurry})")
+                                              text=f"🔧 Blurry → upscale ({n_blurry})")
         else:
             self.analyzer_upscale_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                              text="🔧 Aucune floue récupérable")
+                                              text="🔧 No recoverable blurry photo")
 
         # Bouton Kohya
         n_viable = data.get("summary", {}).get("lora_viable", 0)
         n_border = data.get("summary", {}).get("lora_borderline", 0)
         if n_viable + n_border >= 10:
             self.analyzer_kohya_btn.config(state="normal", bg=GREEN, fg=BG,
-                                            text=f"🧬 Préparer Kohya ({n_viable + n_border} photos)")
+                                            text=f"🧬 Prepare Kohya ({n_viable + n_border} photos)")
         else:
             self.analyzer_kohya_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                            text="🧬 Pas assez de photos viables (min 10)")
+                                            text="🧬 Not enough viable photos (min 10)")
 
         # Bouton masques (Lot D)
         if n_viable + n_border >= 1:
             self.analyzer_mask_btn.config(state="normal", bg=ACCENT2, fg=BG,
-                                          text=f"🎭 Masques sujet ({n_viable + n_border} photos)")
+                                          text=f"🎭 Subject masks ({n_viable + n_border} photos)")
         else:
             self.analyzer_mask_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                          text="🎭 Pas d'image viable")
+                                          text="🎭 No viable image")
 
         # Bouton générer manques (Lot E)
         n_suggestions = len(data.get("summary", {}).get("next_to_generate", []))
         if n_suggestions > 0:
             self.analyzer_gen_btn.config(state="normal", bg=ACCENT, fg=BG,
-                                         text=f"✨ Générer manques ({n_suggestions})")
+                                         text=f"✨ Generate missing ({n_suggestions})")
         else:
             self.analyzer_gen_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                         text="✨ Aucun manque détecté")
+                                         text="✨ No gap detected")
 
         # Affiche le verdict global (avec infos ref + overfit + scores target + diversite)
         s = data.get("summary", {})
@@ -2541,18 +2544,18 @@ class App:
             # 2) Résumé .txt lisible
             lines = []
             lines.append("=" * 60)
-            lines.append(f"RAPPORT D'ANALYSE LoRA — {folder.name}")
-            lines.append(f"Généré le {datetime.now():%Y-%m-%d %H:%M:%S}")
+            lines.append(f"LoRA ANALYSIS REPORT — {folder.name}")
+            lines.append(f"Generated on {datetime.now():%Y-%m-%d %H:%M:%S}")
             lines.append("=" * 60)
             lines.append("")
-            lines.append(f"NOTE GLOBALE : {verdict.get('grade','?')} "
+            lines.append(f"OVERALL GRADE: {verdict.get('grade','?')} "
                          f"({verdict.get('grade_desc','')})")
-            lines.append(f"  {s.get('lora_viable',0)} viables · "
+            lines.append(f"  {s.get('lora_viable',0)} viable · "
                          f"{s.get('lora_borderline',0)} borderline · "
-                         f"{s.get('lora_unusable',0)} à virer "
-                         f"(sur {s.get('total_images',0)} images)")
-            lines.append(f"  Cohérence visage : {s.get('overall_face_coherence','N/A')} · "
-                         f"corps : {s.get('overall_body_coherence','N/A')}")
+                         f"{s.get('lora_unusable',0)} to discard "
+                         f"(out of {s.get('total_images',0)} images)")
+            lines.append(f"  Face coherence: {s.get('overall_face_coherence','N/A')} · "
+                         f"body: {s.get('overall_body_coherence','N/A')}")
             # Couverture des plans (types présents / manquants)
             dist = s.get("distribution") or {}
             if dist:
@@ -2560,40 +2563,40 @@ class App:
                 pln = dist.get("plans", {})
                 expr = dist.get("expressions", {})
                 lines.append("")
-                lines.append("COUVERTURE DES PLANS (viables) :")
-                lines.append(f"  Angles    : face {ang.get('front',0)} · "
-                             f"3/4 {ang.get('three_quarter',0)} · profil {ang.get('profil',0)}")
-                lines.append(f"  Cadrage   : gros plan {pln.get('face_only',0)} · "
-                             f"mi-corps {pln.get('both',0)} · plein pied {pln.get('body_only',0)}")
+                lines.append("SHOT COVERAGE (viable):")
+                lines.append(f"  Angles    : front {ang.get('front',0)} · "
+                             f"3/4 {ang.get('three_quarter',0)} · profile {ang.get('profil',0)}")
+                lines.append(f"  Framing   : close-up {pln.get('face_only',0)} · "
+                             f"mid-body {pln.get('both',0)} · full body {pln.get('body_only',0)}")
                 if expr:
-                    lines.append("  Expressions : " +
+                    lines.append("  Expressions: " +
                                  ", ".join(f"{k} ({v})" for k, v in sorted(expr.items(), key=lambda x:-x[1])))
             # Photos a generer
             n2g = s.get("next_to_generate") or []
             if n2g:
                 lines.append("")
-                lines.append("PHOTOS A GENERER POUR COMPLETER :")
+                lines.append("PHOTOS TO GENERATE TO FILL GAPS:")
                 for sug in n2g:
                     lines.append(f"  + {sug}")
             if verdict.get("actions"):
                 lines.append("")
-                lines.append("PLAN D'ACTION :")
+                lines.append("ACTION PLAN:")
                 for a in verdict["actions"]:
                     lines.append(f"  • {a}")
             # Meilleur target
             tscores = s.get("target_scores") or {}
             if tscores:
                 lines.append("")
-                lines.append("SCORES PAR TARGET :")
+                lines.append("SCORES PER TARGET:")
                 for fam, sc in tscores.items():
                     lines.append(f"  {sc.get('grade','?'):>3}  {sc.get('score',0):>3}/100  {fam}")
             lines.append("")
-            lines.append("RECOMMANDATIONS :")
+            lines.append("RECOMMENDATIONS:")
             for r in data.get("recommendations", []):
                 lines.append(f"  {r}")
             lines.append("")
             lines.append("-" * 60)
-            lines.append(f"{'IMAGE':<28} {'VIABLE':<10} RAISON")
+            lines.append(f"{'IMAGE':<28} {'VIABLE':<10} REASON")
             lines.append("-" * 60)
             for img in data.get("images", []):
                 lines.append(f"{img.get('name','?')[:27]:<28} "
@@ -2602,7 +2605,7 @@ class App:
             txt_path = folder / "_analysis_report.txt"
             txt_path.write_text("\n".join(lines), encoding="utf-8")
 
-            self.status_var.set(f"📄 Rapport enregistré : {json_path.name} + {txt_path.name}")
+            self.status_var.set(f"📄 Report saved: {json_path.name} + {txt_path.name}")
         except Exception as e:
             # L'auto-save ne doit jamais faire planter l'affichage
             print(f"Auto-save report failed: {e}")
@@ -2641,10 +2644,10 @@ class App:
               fg=grade_color, bg=CARD).pack(side="left", padx=(0, 15))
         right = Frame(top, bg=CARD)
         right.pack(side="left", fill="x", expand=True)
-        Label(right, text=f"VERDICT DATASET : {desc}",
+        Label(right, text=f"DATASET VERDICT: {desc}",
               font=FONT_H1, fg=grade_color, bg=CARD, anchor="w").pack(fill="x")
         Label(right,
-              text=f"{viable} photos viables maintenant → {after} après cleanup  (cible : {target_min}-{target_ideal})",
+              text=f"{viable} viable photos now → {after} after cleanup  (target: {target_min}-{target_ideal})",
               font=FONT_BODY, fg=TEXT_DIM, bg=CARD, anchor="w").pack(fill="x")
 
         # Bloc reference (si presente)
@@ -2658,24 +2661,24 @@ class App:
                 avg = ref_match.get("avg", 0)
                 if wrong == 0 and doubt == 0:
                     color = GREEN
-                    txt = f"📷 Réf : {ref_info.get('name', '?')}  →  ✅ {ok} photos correspondent (avg {avg})"
+                    txt = f"📷 Ref: {ref_info.get('name', '?')}  →  ✅ {ok} photos match (avg {avg})"
                 elif wrong == 0:
                     color = YELLOW
-                    txt = f"📷 Réf : {ref_info.get('name', '?')}  →  💡 {ok} OK, {doubt} douteuses (avg {avg})"
+                    txt = f"📷 Ref: {ref_info.get('name', '?')}  →  💡 {ok} OK, {doubt} doubtful (avg {avg})"
                 else:
                     color = RED
-                    txt = f"📷 Réf : {ref_info.get('name', '?')}  →  ❌ {wrong} mauvaise(s) personne(s), {doubt} douteuse(s), {ok} OK"
+                    txt = f"📷 Ref: {ref_info.get('name', '?')}  →  ❌ {wrong} wrong person(s), {doubt} doubtful, {ok} OK"
                 Label(ref_box, text=txt, font=FONT_BODY, fg=color, bg=CARD,
                       anchor="w", wraplength=900, justify="left").pack(fill="x")
         elif ref_info and "error" in ref_info:
             Label(self.analyzer_verdict_frame,
-                  text=f"📷 Réf : ⚠️ {ref_info['error']}",
+                  text=f"📷 Ref: ⚠️ {ref_info['error']}",
                   font=FONT_BODY, fg=YELLOW, bg=CARD,
                   anchor="w", wraplength=900, justify="left").pack(fill="x", pady=(8, 0))
 
         # ===== Alertes overfit (tags accessoires trop frequents) =====
         if overfit_alerts:
-            Label(self.analyzer_verdict_frame, text="⚠️ Risques d'overfit :",
+            Label(self.analyzer_verdict_frame, text="⚠️ Overfit risks:",
                   font=FONT_H1, fg=YELLOW, bg=CARD, anchor="w").pack(fill="x", pady=(10, 4))
             # Groupe par categorie pour affichage propre
             by_cat = {}
@@ -2687,13 +2690,13 @@ class App:
                 txt = ", ".join(f"« {a['tag']} » ({int(a['ratio']*100)}%)" for a in top)
                 color = RED if any(a["severity"] == "ALERTE" for a in top) else YELLOW
                 Label(self.analyzer_verdict_frame,
-                      text=f"  • {cat.capitalize()} : {txt}",
+                      text=f"  • {cat.capitalize()}: {txt}",
                       font=FONT_BODY, fg=color, bg=CARD,
                       anchor="w", wraplength=900, justify="left").pack(fill="x")
 
         # ===== SCORES PAR TARGET (7 familles) =====
         if target_scores:
-            Label(self.analyzer_verdict_frame, text="🎯 Scores par famille de target :",
+            Label(self.analyzer_verdict_frame, text="🎯 Scores per target family:",
                   font=FONT_H1, fg=ACCENT, bg=CARD, anchor="w").pack(fill="x", pady=(10, 4))
             for fam, sc in target_scores.items():
                 grade = sc.get("grade", "?")
@@ -2718,13 +2721,13 @@ class App:
             div_color = GREEN if div_score >= 70 else (YELLOW if div_score >= 50 else RED)
             div_row = Frame(self.analyzer_verdict_frame, bg=CARD)
             div_row.pack(fill="x", pady=(10, 2))
-            Label(div_row, text=f"🌈 Diversité : {int(div_score)}/100",
+            Label(div_row, text=f"🌈 Diversity: {int(div_score)}/100",
                   font=FONT_H1, fg=div_color, bg=CARD).pack(side="left")
             Label(div_row, text=f"  ({diversity.get('verdict', '?')})",
                   font=FONT_BODY, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=8)
             if diversity.get("clip_clusters"):
                 Label(div_row,
-                      text=f"  · {diversity['clip_clusters']} clusters visuels CLIP",
+                      text=f"  · {diversity['clip_clusters']} CLIP visual clusters",
                       font=FONT_SMALL, fg=TEXT_DIM, bg=CARD).pack(side="left", padx=8)
 
         # ===== AR DISTRIBUTION =====
@@ -2733,8 +2736,8 @@ class App:
             sq = ar_distribution.get("square", 0)
             po = ar_distribution.get("portrait", 0) + ar_distribution.get("tall_portrait", 0)
             la = ar_distribution.get("landscape", 0) + ar_distribution.get("wide_landscape", 0)
-            ar_txt = (f"📐 Aspect ratio : "
-                       f"⬜ {sq} carré · 📱 {po} portrait · 🖼 {la} paysage")
+            ar_txt = (f"📐 Aspect ratio: "
+                       f"⬜ {sq} square · 📱 {po} portrait · 🖼 {la} landscape")
             Label(self.analyzer_verdict_frame, text=ar_txt,
                   font=FONT_BODY, fg=TEXT, bg=CARD, anchor="w").pack(fill="x", pady=2)
 
@@ -2746,14 +2749,14 @@ class App:
             n_viable_tot = max(1, sum(ang.values()) if ang else 0)
 
             Label(self.analyzer_verdict_frame,
-                  text="📸 Couverture du dataset (photos viables) :",
+                  text="📸 Dataset coverage (viable photos):",
                   font=FONT_H1, fg=ACCENT2, bg=CARD, anchor="w").pack(fill="x", pady=(12, 4))
 
             def cov_line(label, items, missing_msgs):
                 """items = [(nom, count, seuil_ok)] ; missing_msgs = liste de manques."""
                 row = Frame(self.analyzer_verdict_frame, bg=CARD)
                 row.pack(fill="x", pady=1)
-                Label(row, text=f"  {label} :", font=FONT_BODY, fg=TEXT_DIM, bg=CARD,
+                Label(row, text=f"  {label}:", font=FONT_BODY, fg=TEXT_DIM, bg=CARD,
                       width=14, anchor="w").pack(side="left")
                 for nom, cnt, ok in items:
                     color = GREEN if ok else (YELLOW if cnt > 0 else RED)
@@ -2766,23 +2769,23 @@ class App:
             front = ang.get("front", 0); tq = ang.get("three_quarter", 0); prof = ang.get("profil", 0)
             miss_a = []
             if prof == 0:
-                miss_a.append("aucun profil")
+                miss_a.append("no profile shot")
             if tq < 3:
-                miss_a.append("peu de 3/4")
-            cov_line("Angles", [("face", front, front > 0),
+                miss_a.append("few 3/4 shots")
+            cov_line("Angles", [("front", front, front > 0),
                                  ("3/4", tq, tq >= 3),
-                                 ("profil", prof, prof >= 2)], miss_a)
+                                 ("profile", prof, prof >= 2)], miss_a)
 
             # --- Cadrage ---
             fo = pln.get("face_only", 0); bo = pln.get("both", 0); bd = pln.get("body_only", 0)
             miss_p = []
             if bo == 0:
-                miss_p.append("aucun plan mi-corps")
+                miss_p.append("no mid-body shot")
             if bd == 0 and n_viable_tot >= 20:
-                miss_p.append("aucun plein pied")
-            cov_line("Cadrage", [("gros plan", fo, fo > 0),
-                                  ("mi-corps", bo, bo >= 3),
-                                  ("plein pied", bd, bd >= 1)], miss_p)
+                miss_p.append("no full-body shot")
+            cov_line("Framing", [("close-up", fo, fo > 0),
+                                  ("mid-body", bo, bo >= 3),
+                                  ("full-body", bd, bd >= 1)], miss_p)
 
             # --- Expressions ---
             if expr:
@@ -2791,16 +2794,16 @@ class App:
                 exp_color = GREEN if len(expr) >= 3 else YELLOW
                 erow = Frame(self.analyzer_verdict_frame, bg=CARD)
                 erow.pack(fill="x", pady=1)
-                Label(erow, text="  Expressions :", font=FONT_BODY, fg=TEXT_DIM, bg=CARD,
+                Label(erow, text="  Expressions:", font=FONT_BODY, fg=TEXT_DIM, bg=CARD,
                       width=14, anchor="w").pack(side="left")
                 Label(erow, text=exp_txt, font=FONT_BODY, fg=exp_color, bg=CARD,
                       anchor="w", wraplength=700, justify="left").pack(side="left")
                 if len(expr) < 3:
-                    Label(erow, text="  ❗ peu varié", font=FONT_SMALL, fg=RED, bg=CARD).pack(side="left", padx=8)
+                    Label(erow, text="  ❗ not varied enough", font=FONT_SMALL, fg=RED, bg=CARD).pack(side="left", padx=8)
 
         # ===== À GÉNÉRER ENSUITE (manques concrets) =====
         if next_to_generate:
-            Label(self.analyzer_verdict_frame, text="📷 Photos à générer pour compléter :",
+            Label(self.analyzer_verdict_frame, text="📷 Photos to generate to fill gaps:",
                   font=FONT_H1, fg=ACCENT, bg=CARD, anchor="w").pack(fill="x", pady=(10, 4))
             for sug in next_to_generate:
                 Label(self.analyzer_verdict_frame, text=f"  ➕ {sug}",
@@ -2809,7 +2812,7 @@ class App:
 
         # Ligne finale : plan d'action global (cleanup, training…)
         if actions:
-            Label(self.analyzer_verdict_frame, text="🎯 Plan d'action :",
+            Label(self.analyzer_verdict_frame, text="🎯 Action plan:",
                   font=FONT_H1, fg=ACCENT, bg=CARD, anchor="w").pack(fill="x", pady=(10, 4))
             for a in actions:
                 Label(self.analyzer_verdict_frame, text=f"  • {a}",
@@ -2827,14 +2830,14 @@ class App:
             return
         suggestions = data.get("summary", {}).get("next_to_generate", [])
         if not suggestions:
-            messagebox.showinfo("Rien à faire", "Aucun manque détecté.")
+            messagebox.showinfo("Nothing to do", "No gap detected.")
             return
 
         # Dossier de sortie
         default_out = Path(self.analyzer_path.get()).parent / "targeted_workflows"
         out = filedialog.askdirectory(
             initialdir=str(default_out.parent),
-            title="Dossier où exporter les workflows ciblés"
+            title="Folder to export the targeted workflows to"
         )
         out_folder = Path(out) if out else default_out
 
@@ -2850,15 +2853,15 @@ class App:
             )
         except Exception as e:
             import traceback
-            messagebox.showerror("Erreur", f"{e}\n\n{traceback.format_exc()[-300:]}")
+            messagebox.showerror("Error", f"{e}\n\n{traceback.format_exc()[-300:]}")
             return
 
-        msg = f"✅ {len(written)} workflow(s) exporté(s) dans :\n{out_folder}\n\n"
+        msg = f"✅ {len(written)} workflow(s) exported to:\n{out_folder}\n\n"
         for w in written:
             msg += f"  • {w['category']} (x{w['count']}) → {Path(w['workflow_path']).name}\n"
-        msg += "\n➜ Drag-and-drop un .json dans ComfyUI pour lancer la génération.\n"
-        msg += "➜ Le batch_size est déjà réglé sur le nombre demandé."
-        messagebox.showinfo("Workflows ciblés générés", msg)
+        msg += "\n➜ Drag and drop a .json into ComfyUI to start generating.\n"
+        msg += "➜ batch_size is already set to the requested count."
+        messagebox.showinfo("Targeted workflows generated", msg)
         try:
             os.startfile(str(out_folder))
         except Exception:
@@ -2873,17 +2876,17 @@ class App:
 
         # Popup de config
         dlg = tk.Toplevel(self.root)
-        dlg.title("Générer masques sujet")
+        dlg.title("Generate subject masks")
         dlg.configure(bg=BG)
         dlg.geometry("520x340")
         dlg.transient(self.root)
         dlg.grab_set()
 
-        Label(dlg, text="🎭 Générer masques sujet (OneTrainer)",
+        Label(dlg, text="🎭 Generate subject masks (OneTrainer)",
               font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w", padx=20, pady=(15, 4))
         Label(dlg,
-              text="Génère <image>-masklabel.png à côté de chaque photo viable.\n"
-                   "OneTrainer focalise la loss sur le sujet (gain qualité gros fond varié).",
+              text="Generates <image>-masklabel.png next to each viable photo.\n"
+                   "OneTrainer focuses the loss on the subject (helps with varied/busy backgrounds).",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG, justify="left",
               wraplength=480).pack(anchor="w", padx=20, pady=(0, 12))
 
@@ -2891,12 +2894,12 @@ class App:
         thresh_var = tk.DoubleVar(value=0.5)
         thresh_enabled = tk.BooleanVar(value=True)
 
-        tk.Checkbutton(dlg, text="Binariser (recommandé OneTrainer : sujet blanc pur, fond noir pur)",
+        tk.Checkbutton(dlg, text="Binarize (recommended for OneTrainer: pure white subject, pure black background)",
                         variable=thresh_enabled, font=FONT_BODY, fg=TEXT, bg=BG,
                         selectcolor=CARD, activebackground=BG,
                         activeforeground=TEXT).pack(anchor="w", padx=20, pady=4)
 
-        Label(dlg, text="Seuil de binarisation (0.3-0.7) :",
+        Label(dlg, text="Binarization threshold (0.3-0.7):",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", padx=20, pady=(8, 0))
         tk.Scale(dlg, from_=0.1, to=0.9, resolution=0.05,
                   orient="horizontal", variable=thresh_var,
@@ -2905,7 +2908,7 @@ class App:
 
         # Viable only
         viable_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(dlg, text="Uniquement photos viables/borderline",
+        tk.Checkbutton(dlg, text="Viable/borderline photos only",
                         variable=viable_var, font=FONT_BODY, fg=TEXT, bg=BG,
                         selectcolor=CARD, activebackground=BG,
                         activeforeground=TEXT).pack(anchor="w", padx=20, pady=6)
@@ -2920,9 +2923,9 @@ class App:
             dlg.destroy()
             self._launch_mask_generation(data, th, viable_only)
 
-        Button(btn_row, text="Annuler", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
+        Button(btn_row, text="Cancel", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
                relief="flat", padx=20, pady=8, command=dlg.destroy).pack(side="right", padx=4)
-        Button(btn_row, text="🚀 Générer", font=FONT_BODY, bg=ACCENT2, fg=BG,
+        Button(btn_row, text="🚀 Generate", font=FONT_BODY, bg=ACCENT2, fg=BG,
                relief="flat", padx=20, pady=8, command=go).pack(side="right", padx=4)
 
     def _launch_mask_generation(self, data, threshold, viable_only):
@@ -2934,12 +2937,12 @@ class App:
         else:
             names = [img.get("name") for img in data.get("images", []) if img.get("name")]
         if not names:
-            messagebox.showinfo("Rien à faire", "Aucune photo à traiter.")
+            messagebox.showinfo("Nothing to do", "No photo to process.")
             return
 
         folder = self.analyzer_path.get()
-        self.status_var.set("Génération masques en cours...")
-        self.analyzer_mask_btn.config(state="disabled", text="🎭 Génération...")
+        self.status_var.set("Generating masks...")
+        self.analyzer_mask_btn.config(state="disabled", text="🎭 Generating...")
 
         def worker():
             import time as _time
@@ -2983,7 +2986,7 @@ class App:
                                 cur, tot = parts[1].split("/")
                                 fname = parts[2] if len(parts) > 2 else ""
                                 self.root.after(0, lambda c=cur, t=tot, n=fname:
-                                    self.status_var.set(f"Masque {c}/{t} — {n[:40]}"))
+                                    self.status_var.set(f"Mask {c}/{t} — {n[:40]}"))
                             except Exception:
                                 pass
                         elif ln.startswith("STEP "):
@@ -2994,14 +2997,14 @@ class App:
                 t.start()
 
                 stdout, _ = proc.communicate(input=payload, timeout=900)
-                result = json.loads(stdout.strip()) if stdout.strip() else {"errors": ["sortie vide"]}
+                result = json.loads(stdout.strip()) if stdout.strip() else {"errors": ["empty output"]}
                 self.root.after(0, lambda r=result: self._on_mask_done(r))
             except Exception as e:
                 import traceback
                 err = f"{e}\n\n{traceback.format_exc()[-500:]}"
-                self.root.after(0, lambda e=err: messagebox.showerror("Erreur masques", e))
+                self.root.after(0, lambda e=err: messagebox.showerror("Mask error", e))
                 self.root.after(0, lambda: self.analyzer_mask_btn.config(
-                    state="normal", text="🎭 Masques sujet (réessayer)"))
+                    state="normal", text="🎭 Subject masks (retry)"))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -3010,19 +3013,19 @@ class App:
         skipped = result.get("skipped", 0)
         errs = result.get("errors", [])
         total = result.get("total", written + skipped)
-        msg = (f"✅ {written} masque(s) généré(s)\n"
-               f"⏭ {skipped} déjà existant(s)\n"
-               f"📁 Format : <image>-masklabel.png à côté des photos\n\n"
-               f"➜ Charge le dataset dans OneTrainer\n"
-               f"➜ Concepts > Image augmentations > coche \"masked training\"\n"
-               f"➜ Le LoRA ignorera le fond pendant l'entraînement (gain qualité)")
+        msg = (f"✅ {written} mask(s) generated\n"
+               f"⏭ {skipped} already existing\n"
+               f"📁 Format: <image>-masklabel.png next to the photos\n\n"
+               f"➜ Load the dataset in OneTrainer\n"
+               f"➜ Concepts > Image augmentations > check \"masked training\"\n"
+               f"➜ The LoRA will ignore the background during training (quality gain)")
         if errs:
-            msg += f"\n\n⚠️ {len(errs)} erreur(s) :\n" + "\n".join(errs[:3])
-        messagebox.showinfo("Masques générés", msg)
-        self.status_var.set(f"Masques : {written}/{total} générés")
+            msg += f"\n\n⚠️ {len(errs)} error(s):\n" + "\n".join(errs[:3])
+        messagebox.showinfo("Masks generated", msg)
+        self.status_var.set(f"Masks: {written}/{total} generated")
         self.analyzer_mask_btn.config(
             state="normal", bg=ACCENT2, fg=BG,
-            text=f"🎭 Masques sujet ({written} OK)"
+            text=f"🎭 Subject masks ({written} OK)"
         )
 
     def _move_blurry_to_upscale(self):
@@ -3032,24 +3035,24 @@ class App:
             return
         names = data.get("summary", {}).get("blurry_recoverable", []) or []
         if not names:
-            messagebox.showinfo("Rien à faire", "Aucune photo floue récupérable.")
+            messagebox.showinfo("Nothing to do", "No recoverable blurry photo.")
             return
 
         # Recupere les paths complets
         paths_by_name = {img["name"]: img["path"] for img in data.get("images", [])}
         to_move = [paths_by_name[n] for n in names if n in paths_by_name and Path(paths_by_name[n]).exists()]
         if not to_move:
-            messagebox.showinfo("Rien à faire", "Photos introuvables (déjà déplacées ?)")
+            messagebox.showinfo("Nothing to do", "Photos not found (already moved?)")
             return
 
         source_folder = Path(self.analyzer_path.get())
         upscale_folder = source_folder / "_a_upscaler"
 
         if not messagebox.askyesno(
-            "Déplacer vers upscale",
-            f"Déplacer {len(to_move)} photo(s) floue(s) dans :\n{upscale_folder}\n\n"
-            f"Un README expliquant comment les upscaler dans ComfyUI (SUPIR / UltraSharp) "
-            f"sera créé dans le dossier. Continuer ?"
+            "Move to upscale",
+            f"Move {len(to_move)} blurry photo(s) to:\n{upscale_folder}\n\n"
+            f"A README explaining how to upscale them in ComfyUI (SUPIR / UltraSharp) "
+            f"will be created in the folder. Continue?"
         ):
             return
 
@@ -3076,38 +3079,38 @@ class App:
         # Ecrit le README
         readme_path = upscale_folder / "README.txt"
         readme_path.write_text(
-            "PHOTOS FLOUES MAIS RECUPERABLES (nettete 50-100)\n"
+            "BLURRY BUT RECOVERABLE PHOTOS (sharpness 50-100)\n"
             "=" * 60 + "\n\n"
-            f"Genere le : {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            f"Nombre : {moved} photo(s)\n\n"
-            "COMMENT LES SAUVER ?\n"
+            f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            f"Count: {moved} photo(s)\n\n"
+            "HOW TO SAVE THEM\n"
             "--------------------\n\n"
-            "Option 1 : SUPIR (le meilleur pour les visages)\n"
-            "  1. Lance ComfyUI (via AI Launcher)\n"
-            "  2. Charge un workflow SUPIR (custom_nodes/ComfyUI-SUPIR)\n"
-            "  3. LoadImage -> SUPIR Upscale (denoise ~0.3-0.4 pour ne pas trop changer)\n"
-            "  4. Save Image -> reinjecte dans le dataset apres verification\n\n"
-            "Option 2 : UltraSharp (rapide, generique)\n"
+            "Option 1: SUPIR (best for faces)\n"
+            "  1. Launch ComfyUI (via AI Launcher)\n"
+            "  2. Load a SUPIR workflow (custom_nodes/ComfyUI-SUPIR)\n"
+            "  3. LoadImage -> SUPIR Upscale (denoise ~0.3-0.4 to not change too much)\n"
+            "  4. Save Image -> put back into the dataset after checking it\n\n"
+            "Option 2: UltraSharp (fast, generic)\n"
             "  1. ComfyUI -> Load image -> Upscale Image (using Model)\n"
-            "  2. Modele : 4x-UltraSharp.pth (si installe dans models/upscale_models/)\n"
-            "  3. Resize a 1024x1024 si necessaire\n\n"
-            "Option 3 : Refusionner avec InstantID\n"
-            "  Si la photo a un visage clair mais une nettete moyenne,\n"
-            "  refais-la via le workflow 02 (InstantID dataset) avec la meme seed.\n\n"
-            "APRES UPSCALE\n"
+            "  2. Model: 4x-UltraSharp.pth (if installed in models/upscale_models/)\n"
+            "  3. Resize to 1024x1024 if needed\n\n"
+            "Option 3: Re-render with InstantID\n"
+            "  If the photo has a clear face but average sharpness,\n"
+            "  redo it via workflow 02 (InstantID dataset) with the same seed.\n\n"
+            "AFTER UPSCALING\n"
             "-------------\n"
-            "1. Verifie visuellement (pas d'artefacts sur le visage)\n"
-            "2. Remets les fichiers OK dans le dossier dataset parent\n"
-            "3. Relance l'analyse (le cache reconnaitra les nouvelles versions)\n",
+            "1. Check visually (no artifacts on the face)\n"
+            "2. Put the good files back in the parent dataset folder\n"
+            "3. Re-run the analysis (the cache will recognize the new versions)\n",
             encoding="utf-8"
         )
 
-        messagebox.showinfo("Terminé",
-                             f"✅ {moved} photo(s) déplacée(s) dans :\n{upscale_folder}\n\n"
-                             f"Un README.txt explique comment les upscaler.")
-        self.status_var.set(f"Déplacé {moved} photos vers _a_upscaler/")
+        messagebox.showinfo("Done",
+                             f"✅ {moved} photo(s) moved to:\n{upscale_folder}\n\n"
+                             f"A README.txt explains how to upscale them.")
+        self.status_var.set(f"Moved {moved} photos to _a_upscaler/")
         self.analyzer_upscale_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                          text="🔧 Relance l'analyse")
+                                          text="🔧 Re-run the analysis")
 
     def _prepare_kohya(self):
         """Dialog de selection target + preparation LoRA multi-format."""
@@ -3119,24 +3122,24 @@ class App:
             sys.path.insert(0, str(Path(__file__).parent))
             import lora_prep
         except Exception as e:
-            messagebox.showerror("Erreur", f"Module lora_prep introuvable :\n{e}")
+            messagebox.showerror("Error", f"lora_prep module not found:\n{e}")
             return
 
         # === Popup de selection target + nom + captioner ===
         dlg = tk.Toplevel(self.root)
-        dlg.title("Préparer dataset LoRA")
+        dlg.title("Prepare LoRA dataset")
         dlg.configure(bg=BG)
         dlg.geometry("640x640")
         dlg.transient(self.root)
         dlg.grab_set()
 
-        Label(dlg, text="🧬 Préparer un dataset LoRA",
+        Label(dlg, text="🧬 Prepare a LoRA dataset",
               font=FONT_H1, fg=ACCENT, bg=BG).pack(anchor="w", padx=20, pady=(15, 4))
-        Label(dlg, text="Le crop, la résolution et le format de config s'adaptent au target choisi.",
+        Label(dlg, text="Crop, resolution and config format adapt to the chosen target.",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", padx=20, pady=(0, 12))
 
         # Trigger word
-        Label(dlg, text="Nom de la persona (trigger word) :",
+        Label(dlg, text="Persona name (trigger word):",
               font=FONT_BODY, fg=TEXT, bg=BG).pack(anchor="w", padx=20)
         persona_var = StringVar(value="persona")
         persona_entry = tk.Entry(dlg, textvariable=persona_var, font=FONT_MONO,
@@ -3144,7 +3147,7 @@ class App:
         persona_entry.pack(fill="x", padx=20, ipady=5, pady=(2, 10))
 
         # Target (groupé par catégorie)
-        Label(dlg, text="Trainer / modèle cible :",
+        Label(dlg, text="Trainer / target model:",
               font=FONT_BODY, fg=TEXT, bg=BG).pack(anchor="w", padx=20)
         target_var = StringVar(value="sdxl_kohya")
         # Construit la liste groupee : [--- Photo réaliste ---, sdxl_kohya, ...]
@@ -3172,8 +3175,8 @@ class App:
         # Modeles a la mode SANS export possible depuis des photos (evite de chercher en vain)
         not_exp = getattr(lora_prep, "NOT_EXPORTABLE", {})
         if not_exp:
-            Label(dlg, text="Pas d'export possible : " + ", ".join(not_exp) +
-                            "  (détails dans le README de chaque export)",
+            Label(dlg, text="No export available: " + ", ".join(not_exp) +
+                            "  (details in each export's README)",
                   font=FONT_SMALL, fg=TEXT_DIM, bg=BG, justify="left",
                   wraplength=580).pack(anchor="w", padx=20, pady=(0, 12))
 
@@ -3190,22 +3193,22 @@ class App:
             q_prefix = cfg.get("quality_prefix")
             note = ""
             if cap == "natural":
-                note = "  ⭐ JoyCaption recommandé (relance l'analyse en mode 'joycaption' ou 'all')."
+                note = "  ⭐ JoyCaption recommended (re-run the analysis in 'joycaption' or 'all' mode)."
             if q_prefix:
-                note += f"\n   🏷 Quality tags auto-ajoutés : « {q_prefix} »"
+                note += f"\n   🏷 Quality tags auto-added: “{q_prefix}”"
             if cfg.get("notes"):
                 note += f"\n   ℹ {cfg['notes']}"
             target_info.config(
                 text=(f"→ {label}\n"
-                      f"   Résolution(s) : {res}   |   Captioner conseillé : {cap}\n"
-                      f"   Doc : {cfg.get('trainer_doc_url', '')}{note}")
+                      f"   Resolution(s): {res}   |   Recommended captioner: {cap}\n"
+                      f"   Doc: {cfg.get('trainer_doc_url', '')}{note}")
             )
         target_combo.bind("<<ComboboxSelected>>", update_target_info)
         update_target_info()
 
         # Viable only
         viable_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(dlg, text="N'inclure que les photos viables (recommandé)",
+        tk.Checkbutton(dlg, text="Only include viable photos (recommended)",
                         variable=viable_var, font=FONT_BODY, fg=TEXT, bg=BG,
                         selectcolor=CARD, activebackground=BG,
                         activeforeground=TEXT).pack(anchor="w", padx=20, pady=4)
@@ -3213,11 +3216,11 @@ class App:
         # Masques sujet (Lot D)
         masks_var = tk.BooleanVar(value=False)
         tk.Checkbutton(dlg,
-                        text="🎭 Générer aussi les masques sujet (OneTrainer masked training)",
+                        text="🎭 Also generate subject masks (OneTrainer masked training)",
                         variable=masks_var, font=FONT_BODY, fg=TEXT, bg=BG,
                         selectcolor=CARD, activebackground=BG,
                         activeforeground=TEXT).pack(anchor="w", padx=20, pady=4)
-        Label(dlg, text="   (Recommandé pour OneTrainer — fond noir = ignoré pendant le training)",
+        Label(dlg, text="   (Recommended for OneTrainer — black background = ignored during training)",
               font=FONT_SMALL, fg=TEXT_DIM, bg=BG).pack(anchor="w", padx=20)
 
         # Overwrite existing captions (si on re-lance la prep sur le meme dossier)
@@ -3234,7 +3237,7 @@ class App:
         def go():
             persona = persona_var.get().strip().replace(" ", "_")
             if not persona:
-                messagebox.showwarning("Manquant", "Donne un trigger word.", parent=dlg)
+                messagebox.showwarning("Missing", "Provide a trigger word.", parent=dlg)
                 return
             target = target_var.get()
             viable_only = viable_var.get()
@@ -3244,9 +3247,9 @@ class App:
             self._launch_lora_prep(data, persona, target, viable_only, with_masks,
                                     overwrite_captions)
 
-        Button(btn_row, text="Annuler", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
+        Button(btn_row, text="Cancel", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
                relief="flat", padx=20, pady=8, command=dlg.destroy).pack(side="right", padx=4)
-        Button(btn_row, text="🚀 Préparer", font=FONT_BODY, bg=GREEN, fg=BG,
+        Button(btn_row, text="🚀 Prepare", font=FONT_BODY, bg=GREEN, fg=BG,
                relief="flat", padx=20, pady=8, command=go).pack(side="right", padx=4)
 
     def _launch_lora_prep(self, data, persona, target, viable_only, with_masks=False,
@@ -3259,16 +3262,16 @@ class App:
         default_out = Path(self.analyzer_path.get()).parent / f"{folder_prefix}_{persona}"
         out = filedialog.askdirectory(
             initialdir=str(default_out.parent),
-            title=f"Dossier où créer {folder_prefix}_{persona}/ (annule = défaut)"
+            title=f"Folder to create {folder_prefix}_{persona}/ in (cancel = default)"
         )
         out_folder = Path(out) / f"{folder_prefix}_{persona}" if out else default_out
 
-        self.status_var.set(f"Préparation {cfg['label']} en cours...")
-        self.analyzer_kohya_btn.config(state="disabled", text="🧬 Préparation...")
+        self.status_var.set(f"Preparing {cfg['label']}...")
+        self.analyzer_kohya_btn.config(state="disabled", text="🧬 Preparing...")
 
         def progress_cb(cur, tot, name):
             self.root.after(0, lambda c=cur, t=tot, n=name:
-                self.status_var.set(f"Prep : {c}/{t} — {n}"))
+                self.status_var.set(f"Prep: {c}/{t} — {n}"))
 
         def worker():
             try:
@@ -3284,7 +3287,7 @@ class App:
                 )
                 # Si demande, genere aussi les masques sujet dans le dossier final
                 if with_masks:
-                    self.root.after(0, lambda: self.status_var.set("Génération masques sujet…"))
+                    self.root.after(0, lambda: self.status_var.set("Generating subject masks…"))
                     images_subfolder = lora_prep.TARGETS[target].get("folder_naming") == "kohya"
                     rep = lora_prep.TARGETS[target].get("default_repeats") or 10
                     masks_target = out_folder / (f"{rep}_{persona}" if images_subfolder else "images")
@@ -3314,9 +3317,9 @@ class App:
             except Exception as e:
                 import traceback
                 err = f"{e}\n\n{traceback.format_exc()[-500:]}"
-                self.root.after(0, lambda e=err: messagebox.showerror("Erreur prep", e))
+                self.root.after(0, lambda e=err: messagebox.showerror("Prep error", e))
                 self.root.after(0, lambda: self.analyzer_kohya_btn.config(
-                    state="normal", text="🧬 Préparer LoRA (réessayer)"))
+                    state="normal", text="🧬 Prepare LoRA (retry)"))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -3326,25 +3329,25 @@ class App:
         errs = result.get("errors", [])
         tgt = result.get("target", "?")
         cfg_path = result.get("config_path")
-        msg = (f"✅ {written} photo(s) préparée(s) (crop + captions)\n"
-               f"⏭ {skipped} exclue(s) (non viables)\n\n"
+        msg = (f"✅ {written} photo(s) prepared (crop + captions)\n"
+               f"⏭ {skipped} excluded (not viable)\n\n"
                f"📁 {out_folder}\n"
-               f"🎯 Target : {tgt}\n")
+               f"🎯 Target: {tgt}\n")
         if cfg_path:
-            msg += f"⚙ Config : {Path(cfg_path).name}\n"
+            msg += f"⚙ Config: {Path(cfg_path).name}\n"
         masks_n = result.get("masks_generated")
         if masks_n is not None:
-            msg += f"🎭 Masques sujet : {masks_n} générés\n"
+            msg += f"🎭 Subject masks: {masks_n} generated\n"
         if result.get("masks_error"):
-            msg += f"⚠️ Erreur masques : {result['masks_error'][:100]}\n"
-        msg += "\nLis le README.txt pour les instructions de lancement."
+            msg += f"⚠️ Mask error: {result['masks_error'][:100]}\n"
+        msg += "\nRead README.txt for launch instructions."
         if errs:
-            msg += f"\n\n⚠️ {len(errs)} erreur(s) :\n" + "\n".join(errs[:3])
-        messagebox.showinfo("Dataset LoRA prêt", msg)
-        self.status_var.set(f"Prep terminé : {written} photos dans {out_folder.name}/")
+            msg += f"\n\n⚠️ {len(errs)} error(s):\n" + "\n".join(errs[:3])
+        messagebox.showinfo("LoRA dataset ready", msg)
+        self.status_var.set(f"Prep done: {written} photos in {out_folder.name}/")
         self.analyzer_kohya_btn.config(
             state="normal", bg=GREEN, fg=BG,
-            text=f"🧬 Préparer LoRA ({written} OK)"
+            text=f"🧬 Prepare LoRA ({written} OK)"
         )
         # Enchaine : le dossier prepare est pre-rempli dans l'onglet Creer LoRA
         if hasattr(self, "train_folder"):
@@ -3364,16 +3367,16 @@ class App:
         rejected = [img["path"] for img in data.get("images", [])
                     if img.get("lora_viable") == "no" and Path(img["path"]).exists()]
         if not rejected:
-            messagebox.showinfo("Rien à faire", "Aucune photo marquée à virer.")
+            messagebox.showinfo("Nothing to do", "No photo marked to discard.")
             return
 
         source_folder = Path(self.analyzer_path.get())
         reject_folder = source_folder / "_rejected"
 
         if not messagebox.askyesno(
-            "Confirmer le déplacement",
-            f"Déplacer {len(rejected)} photo(s) dans :\n{reject_folder}\n\n"
-            f"Les fichiers seront DEPLACES (pas copiés). Continuer ?"
+            "Confirm move",
+            f"Move {len(rejected)} photo(s) to:\n{reject_folder}\n\n"
+            f"Files will be MOVED (not copied). Continue?"
         ):
             return
 
@@ -3392,13 +3395,13 @@ class App:
             except Exception as e:
                 errors.append(f"{Path(src).name}: {e}")
 
-        msg = f"✅ {moved} photo(s) déplacée(s) dans :\n{reject_folder}"
+        msg = f"✅ {moved} photo(s) moved to:\n{reject_folder}"
         if errors:
-            msg += f"\n\n⚠️ {len(errors)} erreurs :\n" + "\n".join(errors[:5])
-        messagebox.showinfo("Déplacement terminé", msg)
-        self.status_var.set(f"Déplacé : {moved} photo(s) vers _rejected/")
+            msg += f"\n\n⚠️ {len(errors)} error(s):\n" + "\n".join(errors[:5])
+        messagebox.showinfo("Move done", msg)
+        self.status_var.set(f"Moved: {moved} photo(s) to _rejected/")
         self.analyzer_move_btn.config(state="disabled", bg=CARD_HI, fg=TEXT_DIM,
-                                      text="🗑 Relance l'analyse")
+                                      text="🗑 Re-run the analysis")
 
     def _populate_results_table(self, data):
         """Remplit le résumé du bas (NOTE globale + stats + recommandations) et
@@ -3423,17 +3426,17 @@ class App:
         if cap_count > 0:
             extra += f"  |  🏷 {cap_count} captions"
         if ai_count > 0:
-            extra += f"  |  🤖 {ai_count} IA-detected"
+            extra += f"  |  🤖 {ai_count} AI-detected"
         if art_high > 0:
-            extra += f"  |  ❌ {art_high} artefacts sévères"
+            extra += f"  |  ❌ {art_high} severe artifacts"
         summary_text = (
-            f"🏆 NOTE : {grade}  ({grade_desc})\n"
+            f"🏆 GRADE: {grade}  ({grade_desc})\n"
             f"📊 {s.get('total_images', 0)} images  |  "
-            f"✅ {s.get('lora_viable', 0)} viables  |  "
+            f"✅ {s.get('lora_viable', 0)} viable  |  "
             f"⚠️ {s.get('lora_borderline', 0)} borderline  |  "
-            f"❌ {s.get('lora_unusable', 0)} a virer{extra}\n"
-            f"Coherence visage : {s.get('overall_face_coherence', 'N/A')}  |  "
-            f"Coherence corps : {body_coh if body_coh is not None else 'N/A'}\n\n"
+            f"❌ {s.get('lora_unusable', 0)} to discard{extra}\n"
+            f"Face coherence: {s.get('overall_face_coherence', 'N/A')}  |  "
+            f"Body coherence: {body_coh if body_coh is not None else 'N/A'}\n\n"
             + "\n".join(recos)
         )
         self.analyzer_summary.config(text=summary_text, fg=TEXT)
@@ -3458,7 +3461,7 @@ class App:
 
             # === Tag = verdict viabilite LoRA en priorite ===
             viable = img.get("lora_viable", "yes")
-            reason = img.get("lora_reason", "OK pour LoRA")
+            reason = img.get("lora_reason", "OK for LoRA")
 
             if viable == "no":
                 tag = "err"
@@ -3487,8 +3490,8 @@ class App:
         initdir = str(Path(cur).parent) if cur and Path(cur).parent.exists() else None
         f = filedialog.askopenfilename(
             initialdir=initdir,
-            title="Choisir python.exe de ComfyUI",
-            filetypes=[("Python executable", "python*.exe"), ("Tous", "*.*")],
+            title="Choose ComfyUI's python.exe",
+            filetypes=[("Python executable", "python*.exe"), ("All", "*.*")],
         )
         if f:
             var.set(f.replace("/", "\\"))
@@ -3521,7 +3524,7 @@ class App:
         if not path:
             # Vide
             self.preview_ref_label.config(image="", width=200, height=200)
-            self.preview_ref_name.config(text="(aucune)")
+            self.preview_ref_name.config(text="(none)")
             self._preview_ref_photo = None
             return
         # Si c'est un DOSSIER : montre la 1re image + le nombre de réfs
@@ -3534,9 +3537,9 @@ class App:
                            if f.is_file() and f.suffix.lower() in exts])
             if imgs:
                 thumb_path = str(imgs[0])
-                label_txt = f"📁 {p.name} ({len(imgs)} réfs)"
+                label_txt = f"📁 {p.name} ({len(imgs)} refs)"
             else:
-                self.preview_ref_name.config(text=f"📁 {p.name} (vide ⚠️)")
+                self.preview_ref_name.config(text=f"📁 {p.name} (empty ⚠️)")
                 self.preview_ref_label.config(image="", width=200, height=200)
                 self._preview_ref_photo = None
                 return
@@ -3624,7 +3627,7 @@ class App:
             lbl.image = photo  # garde la ref
             lbl.pack()
         except Exception as e:
-            Label(left, text=f"Erreur affichage : {e}", fg=RED, bg=BG).pack()
+            Label(left, text=f"Display error: {e}", fg=RED, bg=BG).pack()
 
         # Details a droite
         right = Frame(popup, bg=CARD, padx=14, pady=14, width=350)
@@ -3639,49 +3642,49 @@ class App:
                 return
             row = Frame(right, bg=CARD)
             row.pack(fill="x", pady=2)
-            Label(row, text=f"{label} :", font=FONT_SMALL, fg=TEXT_DIM, bg=CARD,
+            Label(row, text=f"{label}:", font=FONT_SMALL, fg=TEXT_DIM, bg=CARD,
                   width=18, anchor="w").pack(side="left")
             Label(row, text=str(val), font=FONT_BODY, fg=color, bg=CARD,
                   anchor="w", wraplength=200, justify="left").pack(side="left", fill="x", expand=True)
 
         viable = img_data.get("lora_viable", "?")
         v_color = {"yes": GREEN, "borderline": YELLOW, "no": RED}.get(viable, TEXT)
-        kv("Viabilité LoRA", viable.upper(), v_color)
-        kv("Raison", img_data.get("lora_reason"))
+        kv("LoRA viability", viable.upper(), v_color)
+        kv("Reason", img_data.get("lora_reason"))
         kv("", "")
         kv("Resolution", f"{img_data.get('width')}x{img_data.get('height')}")
-        kv("Nettete", img_data.get("sharpness"))
+        kv("Sharpness", img_data.get("sharpness"))
         kv("Brightness", img_data.get("brightness"))
-        kv("Contraste", img_data.get("contrast"))
-        kv("Qualité", img_data.get("quality_verdict"))
+        kv("Contrast", img_data.get("contrast"))
+        kv("Quality", img_data.get("quality_verdict"))
         kv("", "")
-        kv("Visages", img_data.get("face_count"))
-        kv("% du cadre", f"{img_data.get('face_proportion', 0):.1f}%" if img_data.get("face_proportion") else None)
+        kv("Faces", img_data.get("face_count"))
+        kv("% of frame", f"{img_data.get('face_proportion', 0):.1f}%" if img_data.get("face_proportion") else None)
         kv("Yaw (pose)", f"{img_data.get('face_yaw'):+.1f}°" if img_data.get("face_yaw") is not None else None)
-        kv("Type de plan", img_data.get("view_type"))
+        kv("Shot type", img_data.get("view_type"))
         kv("Expression", img_data.get("expression"))
-        kv("Sim visage moy", img_data.get("face_similarity_avg"))
-        kv("Sim corps moy", img_data.get("body_similarity_avg"))
+        kv("Avg face sim", img_data.get("face_similarity_avg"))
+        kv("Avg body sim", img_data.get("body_similarity_avg"))
         rm = img_data.get("ref_match")
-        rm_color = {"OK": GREEN, "douteux": YELLOW, "mauvaise personne": RED}.get(rm, TEXT)
-        kv("Match référence", f"{rm} (sim {img_data.get('face_similarity_to_ref')})" if rm else None, rm_color)
+        rm_color = {"OK": GREEN, "doubtful": YELLOW, "wrong person": RED}.get(rm, TEXT)
+        kv("Reference match", f"{rm} (sim {img_data.get('face_similarity_to_ref')})" if rm else None, rm_color)
         if img_data.get("duplicate_of"):
-            kv("Duplicate de", img_data["duplicate_of"], RED)
+            kv("Duplicate of", img_data["duplicate_of"], RED)
         if img_data.get("upscale_candidate"):
             kv("Upscale possible", "✓ (SUPIR/UltraSharp)", YELLOW)
         # Lot B : detection IA + artefacts
         ai_s = img_data.get("ai_score")
         if ai_s is not None:
             ai_color = RED if ai_s > 0.7 else (YELLOW if ai_s > 0.4 else GREEN)
-            kv("Score IA-generated", f"{ai_s:.2f} ({img_data.get('ai_label', '?')})", ai_color)
+            kv("AI-generated score", f"{ai_s:.2f} ({img_data.get('ai_label', '?')})", ai_color)
         art_s = img_data.get("artifacts_severity")
         if art_s and art_s != "none":
             art_color = {"high": RED, "medium": YELLOW, "low": TEXT}.get(art_s, TEXT)
             cats = img_data.get("artifacts_categories") or []
-            kv("Artefacts IA", f"{art_s.upper()} ({', '.join(cats)})", art_color)
+            kv("AI artifacts", f"{art_s.upper()} ({', '.join(cats)})", art_color)
         md_src = img_data.get("ai_metadata_sources")
         if md_src:
-            kv("Metadata IA", f"{', '.join(md_src)} ({img_data.get('ai_metadata_confidence', '?')})", TEXT_DIM)
+            kv("AI metadata", f"{', '.join(md_src)} ({img_data.get('ai_metadata_confidence', '?')})", TEXT_DIM)
 
         # ===== Captions EDITABLES (Lot D — éditeur inline) =====
         # Chaque caption a son propre Text + bouton Sauver qui réécrit le .txt
@@ -3715,17 +3718,17 @@ class App:
                 def save():
                     new_val = text_widget.get("1.0", "end").strip()
                     self._save_caption_edit(img_name, kk, ext, new_val, img_path_str)
-                    status_widget.config(text="✅ sauvegardé", fg=GREEN)
+                    status_widget.config(text="✅ saved", fg=GREEN)
                     # Reset le statut au bout de 2s
                     self.root.after(2000, lambda: status_widget.config(text=""))
                 return save
 
-            Button(right, text=f"💾 Sauver {sidecar_ext}", font=FONT_SMALL,
+            Button(right, text=f"💾 Save {sidecar_ext}", font=FONT_SMALL,
                    bg=CARD_HI, fg=TEXT, relief="flat", padx=8, pady=4,
                    cursor="hand2",
                    command=make_save_handler()).pack(anchor="e", pady=(2, 6))
 
-        Button(right, text="Fermer (Esc)", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
+        Button(right, text="Close (Esc)", font=FONT_BODY, bg=CARD_HI, fg=TEXT,
                relief="flat", padx=12, pady=6, command=popup.destroy).pack(pady=12)
         popup.bind("<Escape>", lambda e: popup.destroy())
 
@@ -3733,7 +3736,7 @@ class App:
         """Sauve une caption editee : ecrit le .txt + maj cache + maj memoire."""
         image_path = Path(image_path_str)
         if not image_path.exists():
-            messagebox.showwarning("Erreur", f"Image introuvable : {image_name}")
+            messagebox.showwarning("Error", f"Image not found: {image_name}")
             return
 
         # 1) Reecrit le sidecar .txt / .nat.txt / .joy.txt
@@ -3741,7 +3744,7 @@ class App:
         try:
             sidecar.write_text(new_value, encoding="utf-8")
         except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible d'écrire {sidecar.name} :\n{e}")
+            messagebox.showerror("Error", f"Could not write {sidecar.name}:\n{e}")
             return
 
         # 2) Met a jour la donnee en memoire (pour les autres affichages)
@@ -3772,9 +3775,9 @@ class App:
                 cache_path.write_text(json.dumps(cache, ensure_ascii=False, indent=1),
                                        encoding="utf-8")
         except Exception as e:
-            print(f"Avertissement : MAJ cache impossible ({e})")
+            print(f"Warning: could not update cache ({e})")
 
-        self.status_var.set(f"Caption sauvegardée : {image_name} ({sidecar_ext})")
+        self.status_var.set(f"Caption saved: {image_name} ({sidecar_ext})")
 
     def _update_preview_verdict(self, mini):
         """Affiche le mini-verdict de la derniere image analysee dans le panneau live."""
@@ -3784,34 +3787,34 @@ class App:
         # Visage
         fc = mini.get("face_count")
         if fc == 0:
-            lines.append("👤 Aucun visage detecte")
+            lines.append("👤 No face detected")
         elif fc == 1:
             prop = mini.get("face_proportion")
             yaw = mini.get("face_yaw")
             ystr = f", yaw {yaw:+.0f}°" if yaw is not None else ""
-            pstr = f" ({prop:.1f}% du cadre)" if prop else ""
-            lines.append(f"👤 1 visage{pstr}{ystr}")
+            pstr = f" ({prop:.1f}% of frame)" if prop else ""
+            lines.append(f"👤 1 face{pstr}{ystr}")
         elif fc and fc > 1:
-            lines.append(f"⚠️ {fc} visages detectes")
+            lines.append(f"⚠️ {fc} faces detected")
 
         # Match a la reference
         sim_ref = mini.get("face_similarity_to_ref")
         rm = mini.get("ref_match")
         if rm is not None and sim_ref is not None:
-            icon = {"OK": "✅", "douteux": "⚠️", "mauvaise personne": "❌"}.get(rm, "•")
-            lines.append(f"{icon} Match ref : {rm} (sim {sim_ref:.2f})")
+            icon = {"OK": "✅", "doubtful": "⚠️", "wrong person": "❌"}.get(rm, "•")
+            lines.append(f"{icon} Ref match: {rm} (sim {sim_ref:.2f})")
 
         # Qualite
         sharp = mini.get("sharpness")
         qv = mini.get("quality_verdict")
         if sharp is not None:
             sq = "✅" if sharp >= 200 else ("⚠️" if sharp >= 100 else "❌")
-            lines.append(f"{sq} Nettete {sharp:.0f}  →  {qv}")
+            lines.append(f"{sq} Sharpness {sharp:.0f}  →  {qv}")
 
         # Expression
         expr = mini.get("expression")
         if expr:
-            lines.append(f"😶 Expression : {expr}")
+            lines.append(f"😶 Expression: {expr}")
 
         # Tags WD14
         tags = mini.get("wd14_tags")
@@ -3827,15 +3830,15 @@ class App:
         ai_score = mini.get("ai_score")
         if ai_score is not None:
             icon = "🤖" if ai_score > 0.5 else "📷"
-            lines.append(f"{icon} IA-score : {ai_score:.2f} ({'généré IA' if ai_score > 0.5 else 'photo'})")
+            lines.append(f"{icon} AI score: {ai_score:.2f} ({'AI-generated' if ai_score > 0.5 else 'photo'})")
         art_sev = mini.get("artifacts_severity")
         if art_sev and art_sev != "none":
             cats = mini.get("artifacts_categories") or []
             icon = {"high": "❌", "medium": "⚠️", "low": "💡"}.get(art_sev, "•")
-            lines.append(f"{icon} Artefacts ({art_sev}) : {', '.join(cats)}")
+            lines.append(f"{icon} Artifacts ({art_sev}): {', '.join(cats)}")
         md_sources = mini.get("ai_metadata_sources") or []
         if md_sources:
-            lines.append(f"📋 Metadata IA : {', '.join(md_sources)}")
+            lines.append(f"📋 AI metadata: {', '.join(md_sources)}")
 
         self.preview_verdict_text.config(text="\n".join(lines))
 
@@ -3845,8 +3848,8 @@ class App:
         initdir = str(Path(cur).parent) if cur and Path(cur).exists() else self.analyzer_path.get()
         f = filedialog.askopenfilename(
             initialdir=initdir,
-            title="Choisir UNE photo de reference (un visage clair)",
-            filetypes=[("Images", "*.png *.jpg *.jpeg *.webp"), ("Tous", "*.*")]
+            title="Choose ONE reference photo (a clear face)",
+            filetypes=[("Images", "*.png *.jpg *.jpeg *.webp"), ("All", "*.*")]
         )
         if f:
             self.analyzer_ref_path.set(f.replace("/", "\\"))
@@ -3858,7 +3861,7 @@ class App:
         initdir = cur if cur and Path(cur).is_dir() else self.analyzer_path.get()
         d = filedialog.askdirectory(
             initialdir=initdir,
-            title="Choisir un dossier de références (2-5 photos de la personne : visage, 3/4, plein pied…)"
+            title="Choose a folder of reference photos (2-5 photos of the person: face, 3/4, full body…)"
         )
         if d:
             self.analyzer_ref_path.set(d.replace("/", "\\"))
@@ -3874,7 +3877,7 @@ class App:
         if hasattr(self, "analyzer_path") and self.cfg.get("datasets_dir"):
             if not self.analyzer_path.get().strip():
                 self.analyzer_path.set(self.cfg["datasets_dir"])
-        messagebox.showinfo("Sauvegarde", "Config enregistrée.")
+        messagebox.showinfo("Saved", "Config saved.")
 
     def _reset_cfg(self):
         for k, v in DEFAULT_CONFIG.items():

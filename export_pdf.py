@@ -1,6 +1,6 @@
 """
-Export du compte rendu d'analyse dataset LoRA en PDF paysage.
-Utilise fpdf2 (leger, pur Python).
+Exports the LoRA dataset analysis report as a landscape PDF.
+Uses fpdf2 (lightweight, pure Python).
 """
 import datetime
 from pathlib import Path
@@ -73,7 +73,7 @@ class AnalysisPDF(FPDF):
         self.set_font("Helvetica", "B", 14)
         self.set_y(5)
         self.set_x(10)
-        self.cell(0, 8, "Rapport d'analyse - Dataset LoRA", new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 8, "Analysis Report - LoRA Dataset", new_x="LMARGIN", new_y="NEXT")
         # Reset
         self.set_text_color(*COLORS["text"])
 
@@ -81,7 +81,7 @@ class AnalysisPDF(FPDF):
         self.set_y(-12)
         self.set_text_color(*COLORS["dim"])
         self.set_font("Helvetica", "", 8)
-        self.cell(0, 5, f"Page {self.page_no()} / {{nb}}  -  Genere le {datetime.datetime.now():%Y-%m-%d %H:%M}",
+        self.cell(0, 5, f"Page {self.page_no()} / {{nb}}  -  Generated on {datetime.datetime.now():%Y-%m-%d %H:%M}",
                  align="C")
 
 
@@ -119,9 +119,9 @@ def export(data, folder_path, out_path):
     pdf.set_text_color(*COLORS["dim"])
     pdf.set_font("Helvetica", "", 9)
     pdf.set_x(10)
-    pdf.cell(0, 5, f"Dossier analyse : {folder_path}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, f"Folder analyzed: {folder_path}", new_x="LMARGIN", new_y="NEXT")
     pdf.set_x(10)
-    pdf.cell(0, 5, f"Date : {datetime.datetime.now():%Y-%m-%d %H:%M:%S}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, f"Date: {datetime.datetime.now():%Y-%m-%d %H:%M:%S}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     # ===== 1.5 VERDICT GLOBAL (encadre en haut) =====
@@ -156,12 +156,12 @@ def export(data, folder_path, out_path):
         pdf.set_xy(x_start + 36, cart_y + 3)
         pdf.set_text_color(*gc)
         pdf.set_font("Helvetica", "B", 13)
-        pdf.cell(0, 7, f"VERDICT DATASET : {desc}")
+        pdf.cell(0, 7, f"DATASET VERDICT: {desc}")
 
         pdf.set_xy(x_start + 36, cart_y + 11)
         pdf.set_text_color(*COLORS["text"])
         pdf.set_font("Helvetica", "", 10)
-        pdf.cell(0, 5, f"{viable_now} viables maintenant -> {after} apres cleanup  (cible {target_min}-{target_ideal})")
+        pdf.cell(0, 5, f"{viable_now} viable now -> {after} after cleanup  (target {target_min}-{target_ideal})")
 
         # Bloc reference (si utilisee)
         pdf.set_y(cart_y + 28)
@@ -173,29 +173,29 @@ def export(data, folder_path, out_path):
             wrong = ref_match.get("wrong", 0)
             avg = ref_match.get("avg", 0)
             if wrong == 0 and doubt == 0:
-                rc = COLORS["green"]; line = f"OK - {ok} photos correspondent (avg {avg})"
+                rc = COLORS["green"]; line = f"OK - {ok} photos match (avg {avg})"
             elif wrong == 0:
-                rc = COLORS["yellow"]; line = f"{ok} OK, {doubt} douteuses (avg {avg})"
+                rc = COLORS["yellow"]; line = f"{ok} OK, {doubt} doubtful (avg {avg})"
             else:
-                rc = COLORS["red"]; line = f"{wrong} mauvaise(s) personne(s), {doubt} douteuse(s), {ok} OK (avg {avg})"
+                rc = COLORS["red"]; line = f"{wrong} wrong person(s), {doubt} doubtful, {ok} OK (avg {avg})"
             pdf.set_text_color(*rc)
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_x(10)
-            pdf.cell(0, 6, f"Photo de reference : {ref_info.get('name','?')} -> {line}",
+            pdf.cell(0, 6, f"Reference photo: {ref_info.get('name','?')} -> {line}",
                      new_x="LMARGIN", new_y="NEXT")
             pdf.ln(1)
         elif ref_info and "error" in ref_info:
             pdf.set_text_color(*COLORS["yellow"])
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_x(10)
-            pdf.cell(0, 6, f"Reference : {ref_info['error']}", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(0, 6, f"Reference: {ref_info['error']}", new_x="LMARGIN", new_y="NEXT")
             pdf.ln(1)
 
         if actions:
             pdf.set_text_color(*COLORS["accent"])
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_x(10)
-            pdf.cell(0, 6, "Plan d'action :", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(0, 6, "Action plan:", new_x="LMARGIN", new_y="NEXT")
             pdf.set_text_color(*COLORS["text"])
             pdf.set_font("Helvetica", "", 9.5)
             for a in actions:
@@ -207,19 +207,19 @@ def export(data, folder_path, out_path):
     pdf.set_text_color(*COLORS["accent"])
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_x(10)
-    pdf.cell(0, 7, "Statistiques globales", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, "Overall statistics", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*COLORS["text"])
 
     stats = [
         ("Total images", summary.get("total_images", 0)),
-        ("LoRA viables", summary.get("lora_viable", 0)),
+        ("LoRA viable", summary.get("lora_viable", 0)),
         ("Borderline", summary.get("lora_borderline", 0)),
-        ("A virer", summary.get("lora_unusable", 0)),
-        ("Coherence visage", summary.get("overall_face_coherence", "N/A")),
-        ("Coherence corps", summary.get("overall_body_coherence", "N/A")),
-        ("Resolution min", summary.get("resolution_min", "N/A")),
-        ("Resolution max", summary.get("resolution_max", "N/A")),
+        ("To remove", summary.get("lora_unusable", 0)),
+        ("Face coherence", summary.get("overall_face_coherence", "N/A")),
+        ("Body coherence", summary.get("overall_body_coherence", "N/A")),
+        ("Min resolution", summary.get("resolution_min", "N/A")),
+        ("Max resolution", summary.get("resolution_max", "N/A")),
     ]
     # Tableau 4 colonnes
     col_w = (pdf.w - 20) / 4
@@ -245,7 +245,7 @@ def export(data, folder_path, out_path):
         pdf.set_text_color(*COLORS["accent"])
         pdf.set_font("Helvetica", "B", 12)
         pdf.set_x(10)
-        pdf.cell(0, 7, "Recommandations", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 7, "Recommendations", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("Helvetica", "", 9.5)
         import re
         for r in recos:
@@ -272,9 +272,9 @@ def export(data, folder_path, out_path):
     pdf.set_text_color(*COLORS["accent"])
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_x(10)
-    pdf.cell(0, 7, "Detail par image", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, "Per-image detail", new_x="LMARGIN", new_y="NEXT")
 
-    headers = ["Image", "Resol.", "Net.", "Vis.", "%vis", "Pose", "Expression", "S.vis", "S.cor", "Qualite", "LoRA - raison"]
+    headers = ["Image", "Res.", "Sharp.", "Faces", "%face", "Pose", "Expression", "S.face", "S.body", "Quality", "LoRA - reason"]
     col_widths = [50, 20, 13, 9, 12, 12, 25, 12, 12, 30, 82]  # ~277mm
 
     # Header
@@ -340,11 +340,11 @@ def export(data, folder_path, out_path):
 
 
 if __name__ == "__main__":
-    # Test : prend un JSON depuis stdin et genere un PDF
+    # Test: reads a JSON file and generates a PDF
     import json
     import sys
     if len(sys.argv) < 3:
-        print("Usage : export_pdf.py <json_file> <output_pdf>")
+        print("Usage: export_pdf.py <json_file> <output_pdf>")
         sys.exit(1)
     with open(sys.argv[1], "r", encoding="utf-8") as f:
         data = json.load(f)

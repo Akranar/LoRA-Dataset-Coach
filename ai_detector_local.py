@@ -25,13 +25,13 @@ class AIDetector:
             import torch
             from transformers import pipeline
         except Exception as e:
-            raise RuntimeError(f"transformers/torch manquant : {e}")
+            raise RuntimeError(f"Missing transformers/torch: {e}")
 
         model_name = model_name or self.DEFAULT_MODEL
         device = 0 if torch.cuda.is_available() else -1
         self.device_label = "cuda" if device == 0 else "cpu"
 
-        print(f"STEP Chargement AI detector ({self.device_label}, "
+        print(f"STEP Loading AI detector ({self.device_label}, "
               f"~350 Mo si 1er run)...", file=sys.stderr, flush=True)
 
         self.pipeline = pipeline(

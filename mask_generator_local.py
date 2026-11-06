@@ -39,7 +39,7 @@ def _ensure_model_downloaded(node_dir):
         return target
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    print(f"STEP Telechargement RMBG-1.4 (~176 Mo, une seule fois)...",
+    print(f"STEP Downloading RMBG-1.4 (~176 MB, one time)...",
           file=sys.stderr, flush=True)
     try:
         from huggingface_hub import hf_hub_download
@@ -52,7 +52,7 @@ def _ensure_model_downloaded(node_dir):
         if Path(downloaded) != target:
             Path(downloaded).rename(target)
     except Exception as e:
-        raise RuntimeError(f"Echec telechargement RMBG-1.4 : {e}")
+        raise RuntimeError(f"Failed to download RMBG-1.4: {e}")
     return target
 
 
@@ -65,7 +65,7 @@ class MaskGenerator:
 
         from briarmbg import BriaRMBG
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"STEP Chargement RMBG-1.4 ({self.device})...",
+        print(f"STEP Loading RMBG-1.4 ({self.device})...",
               file=sys.stderr, flush=True)
         self.net = BriaRMBG()
         self.net.load_state_dict(torch.load(str(model_path), map_location=self.device))
@@ -126,7 +126,7 @@ def generate_masks_for_folder(folder, viable_names=None, threshold=None,
         images = [f for f in images if f.name in set(viable_names)]
 
     if not images:
-        return {"written": 0, "skipped": 0, "errors": ["Aucune image"]}
+        return {"written": 0, "skipped": 0, "errors": ["No images"]}
 
     gen = MaskGenerator()
     written, skipped, errors = 0, 0, []

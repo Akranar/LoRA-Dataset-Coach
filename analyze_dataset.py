@@ -1,15 +1,15 @@
 """
-Analyseur de coherence pour dataset LoRA visage/corps.
-- Detecte les visages avec insightface (antelopev2)
-- Calcule similarite cosinus entre embeddings
-- Identifie les outliers
-- Verifie aussi resolution, ratio, taille
+Coherence analyzer for face/body LoRA datasets.
+- Detects faces with insightface (antelopev2)
+- Computes cosine similarity between embeddings
+- Identifies outliers
+- Also checks resolution, aspect ratio, file size
 
-Lance via Python qui a insightface :
+Run with a Python that has insightface installed:
   python.exe analyze_dataset.py <folder> <mode>
-  mode = 'face' ou 'body' ou 'full'
+  mode = 'face' or 'body' or 'full'
 
-Output : JSON sur stdout.
+Output: JSON on stdout.
 """
 import contextlib
 import io
@@ -77,7 +77,7 @@ def resolve_device(pref="auto"):
             except Exception:
                 want_cuda = False
         if pref == "cuda" and not want_cuda:
-            print("STEP ⚠ device=cuda demandé mais aucun GPU CUDA détecté — repli sur CPU",
+            print("STEP ⚠ device=cuda requested but no CUDA GPU detected — falling back to CPU",
                   file=sys.stderr, flush=True)
 
     if want_cuda:
@@ -151,21 +151,21 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     s = 0
     reasons = []
     # Volume (sur 25)
-    if n_viable >= 30: s += 25; reasons.append("30+ viables")
+    if n_viable >= 30: s += 25; reasons.append("30+ viable")
     elif n_viable >= 20: s += 22
     elif n_viable >= 15: s += 18
     elif n_viable >= 10: s += 12
-    else: s += 5; reasons.append(f"seulement {n_viable} viables")
+    else: s += 5; reasons.append(f"only {n_viable} viable")
     # Resolution 1024+ (sur 20)
     if res_1024_count / max(n_viable, 1) >= 0.9: s += 20
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 15
     elif res_512_count / max(n_viable, 1) >= 0.9: s += 10
-    else: s += 5; reasons.append("resolution sub-optimale")
+    else: s += 5; reasons.append("suboptimal resolution")
     # Captions WD14 (sur 15) - ignore si captioning desactive
     if captioning_enabled:
         if has_wd14 / max(n_viable, 1) >= 0.95: s += 15
         elif has_wd14 / max(n_viable, 1) >= 0.7: s += 10
-        else: s += 3; reasons.append("captions WD14 manquantes")
+        else: s += 3; reasons.append("missing WD14 captions")
     # Diversite (sur 20)
     s += int(diversity_score * 0.20)
     # AR square dominant (sur 10)
@@ -173,25 +173,25 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     elif n_with_ar > 0 and sq / n_with_ar >= 0.5: s += 6
     # Pas d'artefacts severes (sur 10)
     if art_high == 0: s += 10
-    else: s += max(0, 10 - 2 * art_high); reasons.append(f"{art_high} artefacts")
+    else: s += max(0, 10 - 2 * art_high); reasons.append(f"{art_high} artifacts")
 
     if not captioning_enabled:
         s = s * 100 / 85  # renormalise sans le critere captions (15 pts sur 100)
 
-    scores["SDXL classique"] = {
+    scores["SDXL classic"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
-        "reason": ", ".join(reasons) if reasons else "tout en ordre",
+        "reason": ", ".join(reasons) if reasons else "all good",
         "applies_to": ["sdxl_kohya", "onetrainer_sdxl"],
     }
 
     # ============ FAMILLE 2 : SDXL forks anime (Pony/Illustrious/NoobAI) ============
-    s = scores["SDXL classique"]["score"]
+    s = scores["SDXL classic"]["score"]
     # Plus tolerant aux artefacts (style anime)
     if art_high > 0:
         s += min(8, art_high * 2)  # remet une partie des points
     scores["SDXL anime"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
-        "reason": "même base que SDXL classique, plus tolérant aux artefacts",
+        "reason": "same base as SDXL classic, more tolerant of artifacts",
         "applies_to": ["pony_kohya", "illustrious_kohya", "noobai_kohya"],
     }
 
@@ -201,21 +201,21 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     if n_viable >= 25: s += 25
     elif n_viable >= 15: s += 20
     elif n_viable >= 10: s += 12
-    else: s += 5; reasons.append(f"seulement {n_viable} viables")
+    else: s += 5; reasons.append(f"only {n_viable} viable")
     # Resolution 1024 (sur 20)
     if res_1024_count / max(n_viable, 1) >= 0.9: s += 20
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 15
-    else: s += 5; reasons.append("res < 1024 sous-optimal pour Flux")
+    else: s += 5; reasons.append("res < 1024 suboptimal for Flux")
     # Captions naturelles (preferences JoyCaption) (sur 20) - ignore si captioning desactive
     if captioning_enabled:
         if has_joy / max(n_viable, 1) >= 0.9: s += 20
         elif has_natural / max(n_viable, 1) >= 0.9: s += 15  # Florence-2 ok mais sous-optimal
-        elif has_wd14 / max(n_viable, 1) >= 0.9: s += 7; reasons.append("captions WD14 seulement, JoyCaption recommande")
-        else: s += 3; reasons.append("captions manquantes")
+        elif has_wd14 / max(n_viable, 1) >= 0.9: s += 7; reasons.append("WD14 captions only, JoyCaption recommended")
+        else: s += 3; reasons.append("missing captions")
     # Diversite AR (Flux benefice du multi-bucket) (sur 15)
     if ar_variety >= 3: s += 15
     elif ar_variety == 2: s += 10
-    else: s += 5; reasons.append("ratios peu variés (Flux multi-bucket sous-utilisé)")
+    else: s += 5; reasons.append("not much ratio variety (Flux multi-bucket underused)")
     # Diversite globale (sur 15)
     s += int(diversity_score * 0.15)
     # Pas d'artefacts severes (sur 5)
@@ -226,7 +226,7 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
 
     scores["FLUX.1"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
-        "reason": ", ".join(reasons) if reasons else "tout en ordre",
+        "reason": ", ".join(reasons) if reasons else "all good",
         "applies_to": ["flux_aitoolkit", "flux_kohya"],
     }
 
@@ -239,33 +239,33 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     if n_viable >= 25: s += 20
     elif n_viable >= 15: s += 17
     elif n_viable >= 10: s += 12
-    else: s += 5; reasons.append(f"seulement {n_viable} viables")
+    else: s += 5; reasons.append(f"only {n_viable} viable")
     # Resolution (sur 20) : ces modeles s'entrainent a 1 MP et plus
     if res_1024_count / max(n_viable, 1) >= 0.9: s += 20
     elif res_1024_count / max(n_viable, 1) >= 0.5: s += 12
-    else: s += 3; reasons.append("res < 1024 : upscale avant (modeles 1 MP+)")
+    else: s += 3; reasons.append("res < 1024: upscale first (1 MP+ models)")
     # Captions naturelles LONGUES (sur 30) - ignore si captioning desactive
     if captioning_enabled:
         long_caps_llm = sum(1 for r in viable_imgs
                             if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
         if long_caps_llm / max(n_viable, 1) >= 0.8: s += 30
-        elif has_natural / max(n_viable, 1) >= 0.8: s += 18; reasons.append("captions trop courtes pour un encodeur LLM")
-        elif has_wd14 / max(n_viable, 1) >= 0.8: s += 4; reasons.append("tags WD14 = inadaptés (encodeur LLM), JoyCaption requis")
-        else: s += 0; reasons.append("captions manquantes")
+        elif has_natural / max(n_viable, 1) >= 0.8: s += 18; reasons.append("captions too short for an LLM encoder")
+        elif has_wd14 / max(n_viable, 1) >= 0.8: s += 4; reasons.append("WD14 tags unsuitable for an LLM encoder, JoyCaption required")
+        else: s += 0; reasons.append("missing captions")
     # Diversite AR (sur 10)
     s += {3: 10, 2: 7}.get(ar_variety, 3)
     # Diversite globale (sur 15)
     s += int(diversity_score * 0.15)
     # Artefacts (sur 5)
     if art_high == 0: s += 5
-    else: reasons.append(f"{art_high} artefacts")
+    else: reasons.append(f"{art_high} artifacts")
 
     if not captioning_enabled:
         s = s * 100 / 70  # renormalise sans le critere captions (30 pts sur 100)
 
     scores["Image 2025-26 (FLUX.2 / Qwen-Image / Z-Image)"] = {
         "score": min(100, s), "grade": _grade_from_score(min(100, s)),
-        "reason": ", ".join(reasons) if reasons else "tout en ordre",
+        "reason": ", ".join(reasons) if reasons else "all good",
         "applies_to": ["flux2_dev_aitoolkit", "flux2_klein_aitoolkit", "flux2_musubi",
                        "qwen_image_musubi", "qwen_image_aitoolkit", "zimage_musubi",
                        "zimage_aitoolkit", "chroma_aitoolkit"],
@@ -277,7 +277,7 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     if n_viable >= 30: s += 25
     elif n_viable >= 20: s += 18
     elif n_viable >= 10: s += 10
-    else: s += 3; reasons.append(f"vraiment {n_viable} viables ? Wan demande +")
+    else: s += 3; reasons.append(f"only {n_viable} viable? Wan wants more")
     # Resolution (sur 15) - Wan accepte plus petite
     if res_512_count / max(n_viable, 1) >= 0.9: s += 15
     else: s += 5
@@ -289,7 +289,7 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
                          and len((r.get("joycaption") or r.get("natural_caption"))) >= 100)
         if long_caps / max(n_viable, 1) >= 0.7: s += 20
         elif has_natural / max(n_viable, 1) >= 0.7: s += 12
-        elif has_wd14 / max(n_viable, 1) >= 0.7: s += 4; reasons.append("WD14 trop court pour Wan, JoyCaption recommande")
+        elif has_wd14 / max(n_viable, 1) >= 0.7: s += 4; reasons.append("WD14 too short for Wan, JoyCaption recommended")
     # Diversite AR (Wan multi-bucket vidéo) (sur 15)
     if ar_variety >= 2: s += 15
     elif ar_variety == 1: s += 8
@@ -303,8 +303,8 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
         s = s * 100 / 80  # renormalise sans le critere captions (20 pts sur 100)
 
     wan_score = min(100, s)
-    wan_reasons = reasons + ["photos seules : apparence apprise, pas le mouvement"]
-    scores["Wan 2.2 vidéo"] = {
+    wan_reasons = reasons + ["stills only: appearance learned, not motion"]
+    scores["Wan 2.2 video"] = {
         "score": wan_score, "grade": _grade_from_score(wan_score),
         "reason": ", ".join(wan_reasons),
         "applies_to": ["wan22_musubi", "wan22_aitoolkit", "wan21_musubi"],
@@ -318,28 +318,28 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
     if n_viable >= 30: s += 20
     elif n_viable >= 20: s += 15
     elif n_viable >= 10: s += 8
-    else: s += 3; reasons.append(f"seulement {n_viable} viables")
+    else: s += 3; reasons.append(f"only {n_viable} viable")
     if res_1024_count / max(n_viable, 1) >= 0.7: s += 15
     elif res_512_count / max(n_viable, 1) >= 0.9: s += 10
-    else: s += 3; reasons.append("resolution faible")
+    else: s += 3; reasons.append("low resolution")
     # Captions naturelles longues (sur 25) - ignore si captioning desactive
     if captioning_enabled:
         long_caps_v = sum(1 for r in viable_imgs
                           if len(r.get("joycaption") or r.get("natural_caption") or "") >= 150)
         if long_caps_v / max(n_viable, 1) >= 0.8: s += 25
-        elif has_natural / max(n_viable, 1) >= 0.8: s += 14; reasons.append("captions trop courtes (encodeur VLM)")
-        else: s += 2; reasons.append("captions naturelles détaillées requises")
+        elif has_natural / max(n_viable, 1) >= 0.8: s += 14; reasons.append("captions too short (VLM encoder)")
+        else: s += 2; reasons.append("detailed natural-language captions required")
     if po >= 3 and la >= 3: s += 15
     elif po >= 1 and la >= 1: s += 8
-    else: s += 2; reasons.append("aucun cadrage 16:9/9:16")
+    else: s += 2; reasons.append("no 16:9/9:16 framing")
     s += int(diversity_score * 0.15)
     if art_high == 0: s += 10
-    else: reasons.append(f"{art_high} artefacts")
-    reasons.append("photos seules : apparence apprise, pas le mouvement")
+    else: reasons.append(f"{art_high} artifacts")
+    reasons.append("stills only: appearance learned, not motion")
     if not captioning_enabled:
         s = s * 100 / 75  # renormalise sans le critere captions (25 pts sur 100)
     s = min(100, s)
-    scores["Vidéo 2025-26 (HunyuanVideo 1.5 / LTX-2 / MiniMax-H3)"] = {
+    scores["Video 2025-26 (HunyuanVideo 1.5 / LTX-2 / MiniMax-H3)"] = {
         "score": s, "grade": _grade_from_score(s),
         "reason": ", ".join(reasons),
         "applies_to": ["hunyuan15_musubi", "ltx2_aitoolkit", "minimax_h3_musubi"],
@@ -347,9 +347,9 @@ def _compute_target_scores(results, viable_imgs, summary, n_viable, captioning_e
 
     # ============ FAMILLE 6 : Vidéo legacy (HunyuanVideo 1 / LTX 0.9 / Mochi / CogVideoX) ============
     s = max(0, wan_score - 5)
-    scores["Vidéo legacy (Hunyuan 1/LTX 0.9/Mochi/CogVideoX)"] = {
+    scores["Video legacy (Hunyuan 1/LTX 0.9/Mochi/CogVideoX)"] = {
         "score": s, "grade": _grade_from_score(s),
-        "reason": "modèles dépassés — préfère Wan 2.2, HunyuanVideo 1.5 ou LTX-2",
+        "reason": "outdated models — prefer Wan 2.2, HunyuanVideo 1.5 or LTX-2",
         "applies_to": ["hunyuan_diffpipe", "ltx_video_diffpipe",
                          "cogvideox_diffpipe", "mochi_diffpipe", "open_sora_diffpipe"],
     }
@@ -414,7 +414,7 @@ def save_cache(folder, cache_dict):
             json.dumps(cache_dict, ensure_ascii=False, indent=1, default=_json_default),
             encoding="utf-8")
     except Exception as e:
-        print(f"STEP Echec ecriture cache : {e}", file=sys.stderr, flush=True)
+        print(f"STEP Failed to write cache: {e}", file=sys.stderr, flush=True)
 
 
 def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
@@ -462,9 +462,9 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                      if f.is_file() and f.suffix.lower() in exts])
 
     if not images:
-        return {"error": "Aucune image .png/.jpg/.jpeg/.webp trouvee."}
+        return {"error": "No .png/.jpg/.jpeg/.webp image found."}
 
-    print(f"STEP {len(images)} image(s) trouvée(s) — import des librairies (torch/insightface)...",
+    print(f"STEP Found {len(images)} image(s) — importing libraries (torch/insightface)...",
           file=sys.stderr, flush=True)
     # Import lourd ici (pour pouvoir retourner l'erreur avant si folder vide)
     try:
@@ -472,7 +472,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         from PIL import Image
         from insightface.app import FaceAnalysis
     except ImportError as e:
-        return {"error": f"Module manquant : {e}"}
+        return {"error": f"Missing module: {e}"}
 
     # Resolution du device (GPU si dispo) - partage par insightface + CLIP
     torch_device, onnx_providers = resolve_device(device)
@@ -489,7 +489,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     if insight_root is None:
         return {"error": not_found_message("insightface antelopev2", _insight_tried)}
 
-    print(f"STEP Chargement du modèle de détection de visage (insightface antelopev2, {torch_device.upper()})...",
+    print(f"STEP Loading face detection model (insightface antelopev2, {torch_device.upper()})...",
           file=sys.stderr, flush=True)
     try:
         # Redirige les prints d'insightface vers stderr pour pas polluer le JSON
@@ -500,10 +500,10 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             # ctx_id >= 0 = GPU, -1 = CPU pour insightface
             ctx = 0 if torch_device == "cuda" else -1
             app.prepare(ctx_id=ctx, det_size=(640, 640))
-        print("STEP Modèle visage prêt.", file=sys.stderr, flush=True)
+        print("STEP Face model ready.", file=sys.stderr, flush=True)
     except Exception as e:
         import traceback
-        return {"error": f"Init insightface ({insight_root}) : {e}\n\n{traceback.format_exc()[-500:]}"}
+        return {"error": f"insightface init ({insight_root}): {e}\n\n{traceback.format_exc()[-500:]}"}
 
     # ===== Reference(s) (optionnel) : 1 fichier OU un dossier de photos =====
     # Plusieurs references -> on calcule un CENTROIDE d'identite (moyenne des
@@ -522,10 +522,10 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             ref_files = [rp]
 
         if not ref_files:
-            ref_info = {"error": f"Reference introuvable ou vide : {rp}"}
+            ref_info = {"error": f"Reference not found or empty: {rp}"}
             print(f"STEP {ref_info['error']}", file=sys.stderr, flush=True)
         else:
-            print(f"STEP Analyse de {len(ref_files)} référence(s) d'identité...",
+            print(f"STEP Analyzing {len(ref_files)} identity reference(s)...",
                   file=sys.stderr, flush=True)
             ref_embs = []
             ref_names_ok = []
@@ -542,10 +542,10 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                     ref_embs.append(rmain.normed_embedding)
                     ref_names_ok.append(rf.name)
                 except Exception as e:
-                    print(f"STEP Réf {rf.name} : erreur ({e})", file=sys.stderr, flush=True)
+                    print(f"STEP Ref {rf.name}: error ({e})", file=sys.stderr, flush=True)
 
             if not ref_embs:
-                ref_info = {"error": f"Aucun visage détecté dans la/les référence(s) "
+                ref_info = {"error": f"No face detected in the reference(s) "
                                      f"({', '.join(f.name for f in ref_files[:3])}…)"}
                 print(f"STEP {ref_info['error']}", file=sys.stderr, flush=True)
             else:
@@ -561,9 +561,9 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                     "ref_names": ref_names_ok[:10],
                     "ref_no_face": ref_no_face,
                 }
-                msg = f"STEP Référence : centroïde sur {len(ref_embs)} visage(s)"
+                msg = f"STEP Reference: centroid over {len(ref_embs)} face(s)"
                 if ref_no_face:
-                    msg += f" ({len(ref_no_face)} sans visage ignorée(s))"
+                    msg += f" ({len(ref_no_face)} with no face ignored)"
                 print(msg, file=sys.stderr, flush=True)
 
     # Init CLIP pour analyse corps + expressions (optionnel)
@@ -698,10 +698,10 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     n_from_cache = 0
     n_new = 0
     if cache_entries_old:
-        print(f"STEP Cache trouvé : {len(cache_entries_old)} photo(s) déjà analysée(s) "
-              f"(les inchangées seront réutilisées)", file=sys.stderr, flush=True)
+        print(f"STEP Cache found: {len(cache_entries_old)} photo(s) already analyzed "
+              f"(unchanged ones will be reused)", file=sys.stderr, flush=True)
     else:
-        print("STEP Aucun cache (1er scan de ce dossier) — tout sera analysé",
+        print("STEP No cache (first scan of this folder) — analyzing everything",
               file=sys.stderr, flush=True)
 
     # Annonce le total au debut sur stderr (pour la barre de progression GUI)
@@ -789,19 +789,19 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                 # Verdict qualite
                 quality_issues = []
                 if sharpness < 100:
-                    quality_issues.append("flou")
+                    quality_issues.append("blurry")
                 if brightness < 40:
-                    quality_issues.append("trop sombre")
+                    quality_issues.append("too dark")
                 elif brightness > 220:
-                    quality_issues.append("trop clair")
+                    quality_issues.append("too bright")
                 if contrast < 25:
-                    quality_issues.append("peu contraste")
+                    quality_issues.append("low contrast")
                 if entry["megapixels"] < 0.5:
-                    quality_issues.append("basse res")
+                    quality_issues.append("low res")
                 if quality_issues:
                     entry["quality_verdict"] = " + ".join(quality_issues)
                 elif sharpness > 500:
-                    entry["quality_verdict"] = "Tres nette"
+                    entry["quality_verdict"] = "Very sharp"
                 else:
                     entry["quality_verdict"] = "OK"
             except Exception as e:
@@ -815,7 +815,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             face_pose = None  # yaw en degres (rotation gauche/droite)
             if not faces:
                 entry["face_count"] = 0
-                entry["face_status"] = "Aucun visage (plan large/dos ?)"
+                entry["face_status"] = "No face (wide shot/back view?)"
                 entry["view_type"] = "body_only"  # pas de visage = vraisemblablement plan corps
                 embeddings.append(None)
             else:
@@ -835,7 +835,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                     entry["view_type"] = "both"  # plan moyen, visage + corps visibles
                 else:
                     entry["view_type"] = "body_only"  # visage minuscule, c'est un plan corps
-                entry["face_status"] = "OK" if entry["face_count"] == 1 else f"{entry['face_count']} visages"
+                entry["face_status"] = "OK" if entry["face_count"] == 1 else f"{entry['face_count']} faces"
 
                 # === Detection orientation (yaw) via les 5 keypoints ===
                 # kps : oeil_g, oeil_d, nez, coin_bouche_g, coin_bouche_d
@@ -873,9 +873,9 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
                         if sim_ref >= 0.5:
                             entry["ref_match"] = "OK"
                         elif sim_ref >= 0.35:
-                            entry["ref_match"] = "douteux"
+                            entry["ref_match"] = "doubtful"
                         else:
-                            entry["ref_match"] = "mauvaise personne"
+                            entry["ref_match"] = "wrong person"
                     except Exception:
                         entry["face_similarity_to_ref"] = None
                         entry["ref_match"] = None
@@ -1079,9 +1079,9 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             if sim_ref >= 0.5:
                 results[i]["ref_match"] = "OK"
             elif sim_ref >= 0.35:
-                results[i]["ref_match"] = "douteux"
+                results[i]["ref_match"] = "doubtful"
             else:
-                results[i]["ref_match"] = "mauvaise personne"
+                results[i]["ref_match"] = "wrong person"
     else:
         # Pas de ref : nettoie les anciennes valeurs cachees
         for r in results:
@@ -1110,11 +1110,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             view = results[i].get("view_type", "both")
             if view == "body_only":
                 # Visage tout petit, similarite peu fiable
-                results[i]["verdict"] = "Visage tres petit"
+                results[i]["verdict"] = "Face too small"
             elif avg < 0.3:
-                results[i]["verdict"] = "OUTLIER (visage different)"
+                results[i]["verdict"] = "OUTLIER (different face)"
             elif avg < 0.5:
-                results[i]["verdict"] = "Faible coherence"
+                results[i]["verdict"] = "Low coherence"
             else:
                 results[i]["verdict"] = "OK"
 
@@ -1124,12 +1124,12 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     for r in results:
         if "verdict" not in r:
             if r.get("view_type") == "body_only":
-                r["verdict"] = "Plan corps / dos"
+                r["verdict"] = "Body shot / back view"
             else:
-                r["verdict"] = "Aucun visage"
+                r["verdict"] = "No face"
 
     # ===== Detection DUPLICATES (pHash + face sim) =====
-    print("STEP Detection des duplicates...", file=sys.stderr, flush=True)
+    print("STEP Detecting duplicates...", file=sys.stderr, flush=True)
     duplicates_groups = []  # Liste de listes d'index
     if len(results) >= 2:
         assigned = [False] * len(results)
@@ -1174,59 +1174,59 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         # Duplicate = exclu d'office
         if r.get("duplicate_of"):
             viable = "no"
-            reasons.append(f"duplicate de {r['duplicate_of']}")
+            reasons.append(f"duplicate of {r['duplicate_of']}")
 
         # Artefacts anatomiques severes = exclu (mains/yeux pourris polluent le LoRA)
         art_sev = r.get("artifacts_severity")
         art_cats = r.get("artifacts_categories", [])
         if art_sev == "high":
             viable = "no"
-            reasons.append(f"artefacts IA : {', '.join(art_cats)}")
+            reasons.append(f"AI artifacts: {', '.join(art_cats)}")
         elif art_sev == "medium":
             if viable == "yes":
                 viable = "borderline"
-            reasons.append(f"artefacts : {', '.join(art_cats)}")
+            reasons.append(f"artifacts: {', '.join(art_cats)}")
 
         # Qualite : flou et basse res = killer
         sharpness = r.get("sharpness")
         if sharpness is not None and sharpness < 100:
             viable = "no"
-            reasons.append("floue")
+            reasons.append("blurry")
         if r.get("megapixels", 1) < 0.4:
             viable = "no"
-            reasons.append("basse res")
+            reasons.append("low res")
 
         # Pas de visage detecte = inutile pour LoRA visage
         if r.get("face_count", 0) == 0:
             viable = "no"
-            reasons.append("visage absent (dos ?)")
+            reasons.append("no face (back view?)")
         elif r.get("face_count", 0) > 1:
             viable = "no"
-            reasons.append("plusieurs visages")
+            reasons.append("multiple faces")
 
         # Si on a une photo de reference, on prend ca comme verite (beaucoup plus fiable)
         sim_ref = r.get("face_similarity_to_ref")
         if sim_ref is not None:
             if sim_ref < 0.35:
                 viable = "no"
-                reasons.append(f"mauvaise personne (ref {sim_ref:.2f})")
+                reasons.append(f"wrong person (ref {sim_ref:.2f})")
             elif sim_ref < 0.5:
                 if viable == "yes":
                     viable = "borderline"
-                reasons.append(f"douteux vs ref ({sim_ref:.2f})")
+                reasons.append(f"doubtful vs ref ({sim_ref:.2f})")
         else:
             # Pas de ref : fallback sur la coherence interne du dataset
             sim = r.get("face_similarity_avg")
             if sim is not None and sim < 0.3:
                 viable = "no"
-                reasons.append("mauvaise personne")
+                reasons.append("wrong person")
 
         # Visage minuscule (< 1%) sur plan large = peu utile en face LoRA
         prop = r.get("face_proportion", 0)
         if prop > 0 and prop < 1:
             if viable == "yes":
                 viable = "borderline"
-            reasons.append("visage minuscule")
+            reasons.append("face is tiny")
 
         # Profil/dos via yaw
         yaw = r.get("face_yaw")
@@ -1234,31 +1234,31 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             abs_yaw = abs(yaw)
             if abs_yaw > 75:
                 viable = "no"
-                reasons.append(f"presque de dos ({yaw:.0f} deg)")
+                reasons.append(f"nearly back view ({yaw:.0f} deg)")
             elif abs_yaw > 50:
                 if viable == "yes":
                     viable = "borderline"
-                reasons.append(f"profil ({yaw:.0f} deg)")
+                reasons.append(f"profile ({yaw:.0f} deg)")
 
         # Sombre / sur-expose
         bright = r.get("brightness")
         if bright is not None:
             if bright < 40:
                 viable = "no"
-                reasons.append("trop sombre")
+                reasons.append("too dark")
             elif bright > 220 and viable == "yes":
                 viable = "borderline"
-                reasons.append("sur-expose")
+                reasons.append("overexposed")
 
         # Faible coherence visage (mais pas outlier total) - skip si on a une ref
         if sim_ref is None:
             sim = r.get("face_similarity_avg")
             if sim is not None and 0.3 <= sim < 0.5 and viable == "yes":
                 viable = "borderline"
-                reasons.append(f"coherence faible (sim {sim:.2f})")
+                reasons.append(f"low coherence (sim {sim:.2f})")
 
         r["lora_viable"] = viable
-        r["lora_reason"] = ", ".join(reasons) if reasons else "OK pour LoRA"
+        r["lora_reason"] = ", ".join(reasons) if reasons else "OK for LoRA"
 
     # ===== PHASE 2 : captions naturelles (LENTES) sur les VIABLES uniquement =====
     # On ne lance Florence/JoyCaption que sur les photos jugées viables/borderline,
@@ -1282,12 +1282,12 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         if pending:
             n_skipped = sum(1 for r in results
                             if r.get("lora_viable") == "no" and not r.get("error"))
-            print(f"STEP Phase 2 : captions naturelles sur {len(pending)} viable(s) "
-                  f"({n_skipped} raté(s) ignoré(s) = temps économisé)",
+            print(f"STEP Phase 2: natural captions on {len(pending)} viable image(s) "
+                  f"({n_skipped} reject(s) skipped = time saved)",
                   file=sys.stderr, flush=True)
             # Reset de la barre de progression pour la phase 2
             print(f"TOTAL {len(pending)}", file=sys.stderr, flush=True)
-            print("STEP 🖼 Génération des captions naturelles (phase 2, viables seulement)…",
+            print("STEP 🖼 Generating natural captions (phase 2, viable images only)…",
                   file=sys.stderr, flush=True)
 
             for j, r in enumerate(pending):
@@ -1366,7 +1366,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
 
             save_cache(folder, cache_new)
             print("PROGRESS_DONE", file=sys.stderr, flush=True)
-            print("STEP Captions naturelles terminées.", file=sys.stderr, flush=True)
+            print("STEP Natural captions done.", file=sys.stderr, flush=True)
 
     # ===== Matrice de similarite CORPS (CLIP) =====
     overall_body_coherence = None
@@ -1386,11 +1386,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             else:
                 results[i]["body_similarity_avg"] = round(avg_b, 3)
                 if avg_b < 0.7:
-                    results[i]["body_verdict"] = "Corps tres different"
+                    results[i]["body_verdict"] = "Very different body"
                 elif avg_b < 0.82:
-                    results[i]["body_verdict"] = "Corps variable"
+                    results[i]["body_verdict"] = "Variable body"
                 else:
-                    results[i]["body_verdict"] = "Corps coherent"
+                    results[i]["body_verdict"] = "Consistent body"
         # Coherence globale corps : uniquement sur les images ou le corps est visible
         body_visible_idx = [j for j, i in enumerate(valid_body_idx)
                            if results[i].get("view_type") != "face_only"]
@@ -1473,100 +1473,100 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     # === Artefacts IA (CRITIQUE - polluent le LoRA) ===
     if n_artifacts_high > 0:
         recommendations.append(
-            f"❌ {n_artifacts_high} photo(s) avec artefacts IA severes (mains/yeux pourris) — "
-            f"a virer absolument, le LoRA va apprendre les defauts"
+            f"❌ {n_artifacts_high} photo(s) with severe AI artifacts (mangled hands/eyes) — "
+            f"remove them, the LoRA will learn the defects"
         )
     if n_artifacts_medium > 0:
         recommendations.append(
-            f"⚠️ {n_artifacts_medium} photo(s) avec artefacts moyens (anatomie, membres) — "
-            f"a verifier individuellement"
+            f"⚠️ {n_artifacts_medium} photo(s) with moderate artifacts (anatomy, limbs) — "
+            f"check them individually"
         )
     # === Images IA non taguees (pollution si dataset suppose etre photo reelle) ===
     if n_ai_classifier > 0:
         pct = round(n_ai_classifier * 100 / len(results), 0) if results else 0
         if pct >= 50:
             recommendations.append(
-                f"💡 {n_ai_classifier}/{len(results)} ({pct:.0f}%) photos detectees IA-generated — "
-                f"normal si dataset InstantID/Flux. Sinon attention au mix."
+                f"💡 {n_ai_classifier}/{len(results)} ({pct:.0f}%) photos detected as AI-generated — "
+                f"normal for an InstantID/Flux dataset. Otherwise watch out for the mix."
             )
         else:
             recommendations.append(
-                f"⚠️ {n_ai_classifier} photo(s) detectee(s) IA-generated dans un dataset suppose reel — "
-                f"verifie via double-clic, pollution possible"
+                f"⚠️ {n_ai_classifier} photo(s) detected as AI-generated in a dataset assumed to be real — "
+                f"double-click to check, possible contamination"
             )
     if n_ai_metadata > 0:
         recommendations.append(
-            f"📋 {n_ai_metadata} photo(s) avec metadata IA explicite (C2PA/EXIF/filename)"
+            f"📋 {n_ai_metadata} photo(s) with explicit AI metadata (C2PA/EXIF/filename)"
         )
     # === Duplicates ===
     if n_duplicates > 0:
-        recommendations.append(f"❌ {n_duplicates} duplicate(s) detecte(s) - overfit garanti, a virer absolument")
+        recommendations.append(f"❌ {n_duplicates} duplicate(s) detected - guaranteed overfit, remove them")
     # === Captions WD14 ===
     if n_captioned > 0:
-        recommendations.append(f"💡 {n_captioned} caption(s) Kohya generee(s) (.txt a cote des images)")
+        recommendations.append(f"💡 {n_captioned} Kohya caption(s) written (.txt next to the images)")
     # === Reference (si presente) ===
     if ref_info and "error" in ref_info:
-        recommendations.append(f"⚠️ Reference inutilisable : {ref_info['error']}")
+        recommendations.append(f"⚠️ Reference unusable: {ref_info['error']}")
     elif ref_match_stats:
         ok, doubt, wrong = ref_match_stats["ok"], ref_match_stats["doubt"], ref_match_stats["wrong"]
         avg = ref_match_stats["avg"]
         if wrong == 0 and doubt == 0:
-            recommendations.append(f"✅ Identite verifiee (vs ref) : {ok} photos correspondent (avg {avg})")
+            recommendations.append(f"✅ Identity verified (vs reference): {ok} photos match (avg {avg})")
         elif wrong == 0:
-            recommendations.append(f"💡 Identite OK avec {doubt} douteuses (vs ref, avg {avg})")
+            recommendations.append(f"💡 Identity OK with {doubt} doubtful (vs reference, avg {avg})")
         else:
-            recommendations.append(f"❌ {wrong} photo(s) ne correspondent PAS a la reference - a virer absolument")
+            recommendations.append(f"❌ {wrong} photo(s) do NOT match the reference - remove them")
             if doubt > 0:
-                recommendations.append(f"⚠️ {doubt} photo(s) douteuse(s) vs reference - a verifier manuellement")
+                recommendations.append(f"⚠️ {doubt} photo(s) doubtful vs reference - check manually")
     if summary["no_face"] > 0:
-        recommendations.append(f"⚠️ {summary['no_face']} image(s) sans visage detecte - a retirer pour LoRA visage")
+        recommendations.append(f"⚠️ {summary['no_face']} image(s) with no face detected - remove for a face LoRA")
     if summary["multiple_faces"] > 0:
-        recommendations.append(f"⚠️ {summary['multiple_faces']} image(s) avec plusieurs visages - risque de confusion")
+        recommendations.append(f"⚠️ {summary['multiple_faces']} image(s) with multiple faces - risk of confusion")
     if overall_coherence is not None:
         if overall_coherence < 0.4:
-            recommendations.append(f"❌ Coherence visage tres faible ({overall_coherence}) - le dataset melange plusieurs personnes")
+            recommendations.append(f"❌ Very low face coherence ({overall_coherence}) - the dataset mixes multiple people")
         elif overall_coherence < 0.6:
-            recommendations.append(f"⚠️ Coherence visage moyenne ({overall_coherence}) - certaines images sont differentes")
+            recommendations.append(f"⚠️ Medium face coherence ({overall_coherence}) - some images are different")
         else:
-            recommendations.append(f"✅ Coherence visage OK ({overall_coherence})")
+            recommendations.append(f"✅ Face coherence OK ({overall_coherence})")
     if overall_body_coherence is not None:
         if overall_body_coherence < 0.65:
-            recommendations.append(f"⚠️ Coherence corps faible ({overall_body_coherence}) - silhouettes/proportions tres differentes")
+            recommendations.append(f"⚠️ Low body coherence ({overall_body_coherence}) - silhouettes/proportions vary a lot")
         elif overall_body_coherence < 0.78:
-            recommendations.append(f"💡 Coherence corps moyenne ({overall_body_coherence}) - normal si tenues/poses varient beaucoup")
+            recommendations.append(f"💡 Medium body coherence ({overall_body_coherence}) - normal if outfits/poses vary a lot")
         else:
-            recommendations.append(f"✅ Coherence corps OK ({overall_body_coherence})")
+            recommendations.append(f"✅ Body coherence OK ({overall_body_coherence})")
     if widths and (max(widths) - min(widths) > 200 or max(heights) - min(heights) > 200):
-        recommendations.append("⚠️ Resolutions tres variees - prefere uniformiser (1024x1024 typique)")
+        recommendations.append("⚠️ Resolutions vary a lot - consider standardizing (typically 1024x1024)")
 
     # Stats qualite
     blurry_count = sum(1 for r in results if r.get("sharpness", 999) < 100)
     dark_count = sum(1 for r in results if r.get("brightness", 128) < 40)
     bright_count = sum(1 for r in results if r.get("brightness", 128) > 220)
     if blurry_count > 0:
-        recommendations.append(f"❌ {blurry_count} image(s) floue(s) (nettete < 100) - a virer")
+        recommendations.append(f"❌ {blurry_count} blurry image(s) (sharpness < 100) - remove them")
     if dark_count > 0:
-        recommendations.append(f"⚠️ {dark_count} image(s) trop sombre(s) - eclairage insuffisant")
+        recommendations.append(f"⚠️ {dark_count} too-dark image(s) - insufficient lighting")
     if bright_count > 0:
-        recommendations.append(f"⚠️ {bright_count} image(s) sur-exposee(s) - blanc cassant")
+        recommendations.append(f"⚠️ {bright_count} overexposed image(s) - blown-out whites")
     sharp_imgs = [r.get("sharpness", 0) for r in results if r.get("sharpness")]
     if sharp_imgs:
         avg_sharp = sum(sharp_imgs) / len(sharp_imgs)
         if avg_sharp > 300:
-            recommendations.append(f"✅ Qualite moyenne du dataset : nette (avg {avg_sharp:.0f})")
+            recommendations.append(f"✅ Average dataset quality: sharp (avg {avg_sharp:.0f})")
         elif avg_sharp > 150:
-            recommendations.append(f"💡 Qualite moyenne : acceptable (avg {avg_sharp:.0f})")
+            recommendations.append(f"💡 Average quality: acceptable (avg {avg_sharp:.0f})")
         else:
-            recommendations.append(f"⚠️ Qualite moyenne : floue (avg {avg_sharp:.0f}) - dataset trop mou")
+            recommendations.append(f"⚠️ Average quality: blurry (avg {avg_sharp:.0f}) - dataset too soft")
 
     # Stats viabilite LoRA = la conclusion finale
     total = len(images)
     if total > 0:
-        recommendations.append(f"🧬 Pour LoRA visage : {n_viable} viable, {n_border} borderline, {n_unusable} a virer")
+        recommendations.append(f"🧬 For a face LoRA: {n_viable} viable, {n_border} borderline, {n_unusable} to remove")
         if n_viable < 15:
-            recommendations.append(f"⚠️ Seulement {n_viable} images vraiment viables - vise 20+ pour un LoRA stable")
+            recommendations.append(f"⚠️ Only {n_viable} truly viable images - aim for 20+ for a stable LoRA")
         elif n_viable >= 20:
-            recommendations.append(f"✅ Dataset suffisant pour entrainer ({n_viable} images viables)")
+            recommendations.append(f"✅ Dataset sufficient to train ({n_viable} viable images)")
 
     # ===== VERDICT GLOBAL : note + plan d'action =====
     target_min = 20  # minimum viable pour un LoRA stable
@@ -1576,19 +1576,19 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     # Note de qualite globale
     if n_viable == 0:
         grade = "F"
-        grade_desc = "INUTILISABLE"
+        grade_desc = "UNUSABLE"
     elif n_viable < 10:
         grade = "D"
-        grade_desc = "TROP MAIGRE"
+        grade_desc = "TOO THIN"
     elif n_viable < 15:
         grade = "C"
-        grade_desc = "INSUFFISANT"
+        grade_desc = "INSUFFICIENT"
     elif n_viable < target_min:
         grade = "B-"
-        grade_desc = "LIMITE"
+        grade_desc = "BORDERLINE"
     elif n_viable < target_ideal:
         grade = "B+"
-        grade_desc = "BON"
+        grade_desc = "GOOD"
     elif n_viable >= target_ideal and (overall_coherence or 0) > 0.6:
         grade = "A"
         grade_desc = "EXCELLENT"
@@ -1599,15 +1599,15 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     # Plan d'action concret
     action_lines = []
     if n_unusable > 0:
-        action_lines.append(f"Vire les {n_unusable} photo(s) marquees a virer → il restera {n_kept_after_cleanup} photos exploitables")
+        action_lines.append(f"Remove the {n_unusable} photo(s) marked for removal → {n_kept_after_cleanup} usable photo(s) will remain")
     if n_viable < target_min:
         manque = target_min - n_viable
-        action_lines.append(f"Genere {manque} photo(s) supplementaire(s) pour atteindre le minimum de {target_min}")
+        action_lines.append(f"Generate {manque} more photo(s) to reach the minimum of {target_min}")
     elif n_viable < target_ideal:
         manque = target_ideal - n_viable
-        action_lines.append(f"Optionnel : ajoute {manque} photo(s) pour viser l'ideal de {target_ideal}")
+        action_lines.append(f"Optional: add {manque} photo(s) to reach the ideal of {target_ideal}")
     else:
-        action_lines.append(f"Dataset suffisant : tu peux lancer le training Kohya SS")
+        action_lines.append(f"Dataset is sufficient: you can start Kohya SS training")
 
     summary_verdict = {
         "grade": grade,
@@ -1624,19 +1624,19 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     if expr_counts:
         total_with_expr = sum(expr_counts.values())
         expr_summary = ", ".join(f"{k} ({v})" for k, v in sorted(expr_counts.items(), key=lambda x: -x[1]))
-        recommendations.append(f"😊 Expressions detectees : {expr_summary}")
+        recommendations.append(f"😊 Expressions detected: {expr_summary}")
         # Verifie le dominance
         top_expr, top_count = max(expr_counts.items(), key=lambda x: x[1])
         if top_count / total_with_expr > 0.7:
-            recommendations.append(f"⚠️ Trop d'une seule expression ({top_expr} = {top_count/total_with_expr:.0%}) - le LoRA risque d'etre biaise")
+            recommendations.append(f"⚠️ Too much of a single expression ({top_expr} = {top_count/total_with_expr:.0%}) - the LoRA may end up biased")
         elif len(expr_counts) < 2:
-            recommendations.append("⚠️ Une seule expression detectee - ajoute des sourires/serieux pour varier")
+            recommendations.append("⚠️ Only one expression detected - add smiles/serious looks for variety")
         elif len(expr_counts) >= 3 and top_count / total_with_expr < 0.6:
-            recommendations.append("✅ Bonne diversite d'expressions (le LoRA generalisera bien)")
+            recommendations.append("✅ Good expression diversity (the LoRA should generalize well)")
     if len(images) < 15:
-        recommendations.append(f"⚠️ Seulement {len(images)} images - vise 20-30 minimum pour un LoRA stable")
+        recommendations.append(f"⚠️ Only {len(images)} images - aim for 20-30 minimum for a stable LoRA")
     elif len(images) > 50:
-        recommendations.append(f"💡 {len(images)} images - peut-etre trop, 25-40 suffit souvent")
+        recommendations.append(f"💡 {len(images)} images - maybe too many, 25-40 is often enough")
 
     # ===== Analyse FREQUENCE TAGS (alerte overfit attributs accessoires) =====
     # Si un tag accessoire (vetement, fond, lumiere) apparait dans >70% des
@@ -1739,19 +1739,19 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             # Cible : ~55% front, ~30% 3/4, ~10% profil
             if front_pct > 0.75:
                 manque = max(3, int(n_viable_total * 0.3) - three_q)
-                next_to_generate.append(f"Genere {manque} photos de 3/4 (yaw 20-45°) — trop de face actuellement ({front_pct*100:.0f}%)")
+                next_to_generate.append(f"Generate {manque} 3/4 photos (yaw 20-45°) — too much straight-on right now ({front_pct*100:.0f}%)")
             if tq_pct < 0.15 and three_q < 4:
-                next_to_generate.append(f"Genere 4-6 photos de 3/4 (yaw 20-45°) — il en manque, {three_q} actuellement")
+                next_to_generate.append(f"Generate 4-6 3/4 photos (yaw 20-45°) — not enough yet, {three_q} right now")
             if profil < 2 and n_viable_total >= 15:
-                next_to_generate.append("Genere 2-3 photos de profil (yaw 60-80°) pour donner l'angle au LoRA")
+                next_to_generate.append("Generate 2-3 profile photos (yaw 60-80°) to give the LoRA that angle")
 
         # Plans
         if face_only > 0 and both_v == 0 and body_only == 0 and n_viable_total >= 10:
-            next_to_generate.append(f"Tout est en close-up : genere 5-8 plans moyens (visage + corps visibles)")
+            next_to_generate.append(f"Everything is close-up: generate 5-8 medium shots (face + body visible)")
         if both_v == 0 and n_viable_total >= 15:
-            next_to_generate.append("Genere 4-6 plans moyens (mi-corps, visage visible) pour varier les plans")
+            next_to_generate.append("Generate 4-6 medium shots (half-body, face visible) to vary the framing")
         if body_only == 0 and n_viable_total >= 20:
-            next_to_generate.append("Optionnel : 2-3 plans larges pour que le LoRA apprenne aussi la silhouette")
+            next_to_generate.append("Optional: 2-3 wide shots so the LoRA also learns the silhouette")
 
         # Expressions
         if expr_dist:
@@ -1760,11 +1760,11 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             if top_expr / max(n_with_expr, 1) > 0.6 and len(expr_dist) < 3:
                 dominant = [e for e, c in expr_dist.items() if c == top_expr][0]
                 next_to_generate.append(
-                    f"Expression dominante : « {dominant} » ({top_expr}/{n_with_expr}) — varie : "
-                    f"ajoute du sourire dent, du sérieux, du surpris…")
+                    f"Dominant expression: « {dominant} » ({top_expr}/{n_with_expr}) — add variety: "
+                    f"a toothy smile, a serious look, a surprised look…")
             elif len(expr_dist) < 3 and n_viable_total >= 15:
-                missing = ", ".join(e for e in ["sourire", "rire", "sérieux", "surpris"] if e not in str(expr_dist))[:60]
-                next_to_generate.append(f"Peu de variete d'expressions ({len(expr_dist)} types) — vise au moins 4 expressions differentes")
+                missing = ", ".join(e for e in ["smile", "laugh", "serious", "surprised"] if e not in str(expr_dist))[:60]
+                next_to_generate.append(f"Not much expression variety ({len(expr_dist)} types) — aim for at least 4 different expressions")
 
     # ===== SCORES PAR TARGET (suggestion automatique du meilleur target) =====
     target_scores = _compute_target_scores(results, viable_imgs, summary, n_viable,
@@ -1777,7 +1777,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             or target_scores
         best_target = max(candidates.items(), key=lambda x: x[1]["score"])
         recommendations.append(
-            f"🎯 Meilleur target pour ce dataset : « {best_target[0]} » "
+            f"🎯 Best target for this dataset: « {best_target[0]} » "
             f"({best_target[1]['grade']}, {best_target[1]['score']}/100) — "
             f"{best_target[1]['reason']}"
         )
@@ -1856,13 +1856,13 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         overall = sum(score_parts) / len(score_parts)
         diversity["overall_score"] = round(overall, 0)
         if overall >= 75:
-            diversity["verdict"] = "Excellente diversité"
+            diversity["verdict"] = "Excellent diversity"
         elif overall >= 55:
-            diversity["verdict"] = "Diversité correcte"
+            diversity["verdict"] = "Decent diversity"
         elif overall >= 35:
-            diversity["verdict"] = "Diversité limitée"
+            diversity["verdict"] = "Limited diversity"
         else:
-            diversity["verdict"] = "Dataset trop homogène"
+            diversity["verdict"] = "Dataset too homogeneous"
 
     summary["diversity"] = diversity
 
@@ -1871,21 +1871,21 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         sc = diversity["overall_score"]
         if sc < 40:
             recommendations.append(
-                f"❌ Diversité du dataset : {sc}/100 — {diversity['verdict']}. "
-                f"Le LoRA risque de mémoriser plus que la persona "
-                f"(attributs accessoires : {', '.join(diversity['dominant_attributes']) or '(voir tags)'}"
+                f"❌ Dataset diversity: {sc}/100 — {diversity['verdict']}. "
+                f"The LoRA risks memorizing more than just the persona "
+                f"(accessory attributes: {', '.join(diversity['dominant_attributes']) or '(see tags)'}"
             )
         elif sc < 60:
             recommendations.append(
-                f"⚠️ Diversité : {sc}/100 — {diversity['verdict']}. "
-                f"Varie {', '.join(diversity['dominant_attributes']) or 'plus les angles/tenues/fonds'} pour un LoRA plus generaliste"
+                f"⚠️ Diversity: {sc}/100 — {diversity['verdict']}. "
+                f"Vary {', '.join(diversity['dominant_attributes']) or 'angles/outfits/backgrounds more'} for a more generalist LoRA"
             )
         else:
-            recommendations.append(f"✅ Diversité : {sc}/100 — {diversity['verdict']}")
+            recommendations.append(f"✅ Diversity: {sc}/100 — {diversity['verdict']}")
     if diversity.get("big_clusters"):
         for c in diversity["big_clusters"][:3]:
             recommendations.append(
-                f"🔁 Cluster de {c['size']} photos quasi-similaires : "
+                f"🔁 Cluster of {c['size']} near-identical photos: "
                 f"{', '.join(c['names'][:3])}{'…' if len(c['names']) > 3 else ''}"
             )
 
@@ -1926,25 +1926,25 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
         # Alertes deséquilibre
         if ar_distribution["tall_portrait"] >= 3:
             ar_alerts.append(
-                f"⚠️ {ar_distribution['tall_portrait']} photo(s) très portrait (AR < 0.5) — "
-                f"risque de cassure du bucketing Flux/Wan"
+                f"⚠️ {ar_distribution['tall_portrait']} very portrait photo(s) (AR < 0.5) — "
+                f"risk of breaking Flux/Wan bucketing"
             )
         if ar_distribution["wide_landscape"] >= 3:
             ar_alerts.append(
-                f"⚠️ {ar_distribution['wide_landscape']} photo(s) très paysage (AR > 2.0) — "
-                f"risque de cassure du bucketing"
+                f"⚠️ {ar_distribution['wide_landscape']} very landscape photo(s) (AR > 2.0) — "
+                f"risk of breaking bucketing"
             )
         if sq_pct > 0.95:
-            ar_target_recos.append("✅ Quasi-100% carré → idéal SDXL/SD1.5/Kohya (crop centre)")
-            ar_target_recos.append("⚠️ Pour Flux/Wan multi-bucket : pense à ajouter des ratios variés")
+            ar_target_recos.append("✅ Nearly 100% square → ideal for SDXL/SD1.5/Kohya (center crop)")
+            ar_target_recos.append("⚠️ For Flux/Wan multi-bucket: consider adding varied ratios")
         elif sq_pct > 0.7 and la_pct < 0.1 and po_pct < 0.2:
-            ar_target_recos.append("✅ Dominante carré → parfait SDXL, OK pour Flux (mais multi-bucket sous-utilisé)")
+            ar_target_recos.append("✅ Mostly square → perfect for SDXL, OK for Flux (but multi-bucket underused)")
         elif po_pct > 0.5:
-            ar_target_recos.append("📱 Dominante portrait → Wan I2V/T2V portrait, Flux portrait OK")
+            ar_target_recos.append("📱 Mostly portrait → Wan I2V/T2V portrait, Flux portrait OK")
         elif la_pct > 0.5:
-            ar_target_recos.append("🖼 Dominante paysage → Wan I2V/T2V paysage, Flux paysage OK")
+            ar_target_recos.append("🖼 Mostly landscape → Wan I2V/T2V landscape, Flux landscape OK")
         elif sq_pct > 0.3 and po_pct > 0.2 and la_pct > 0.1:
-            ar_target_recos.append("✅ Mix sain de ratios → idéal FLUX.2/Qwen-Image/Wan 2.2/LTX-2 multi-bucket")
+            ar_target_recos.append("✅ Healthy ratio mix → ideal for FLUX.2/Qwen-Image/Wan 2.2/LTX-2 multi-bucket")
 
     summary["aspect_ratio_distribution"] = ar_distribution
     summary["aspect_ratio_alerts"] = ar_alerts
@@ -1954,7 +1954,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
     for a in ar_alerts:
         recommendations.append(a)
     for r in ar_target_recos:
-        recommendations.append(f"📐 AR : {r}")
+        recommendations.append(f"📐 AR: {r}")
 
     # ===== Detection photos floues RECUPERABLES (upscale possible) =====
     # Sharpness entre 50 et 100 = floue mais sauvable avec SUPIR/UltraSharp
@@ -1986,18 +1986,18 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
             tags_str = ", ".join(f"« {a['tag']} » ({int(a['ratio']*100)}%)" for a in top)
             icon = "❌" if any(a["severity"] == "ALERTE" for a in top) else "⚠️"
             recommendations.append(
-                f"{icon} Overfit {cat} possible : {tags_str} — varie pour eviter "
-                f"que le LoRA memorise ces traits comme partie de la persona"
+                f"{icon} Possible {cat} overfit: {tags_str} — vary these to avoid "
+                f"the LoRA memorizing them as part of the persona"
             )
 
     # Reco upscale (visible dans le panneau)
     if blurry_recoverable:
         recommendations.append(
-            f"🔧 {len(blurry_recoverable)} photo(s) floue(s) mais récupérable(s) (nettete 50-100) — "
-            f"upscale possible avec SUPIR ou UltraSharp dans ComfyUI"
+            f"🔧 {len(blurry_recoverable)} blurry but recoverable photo(s) (sharpness 50-100) — "
+            f"can be upscaled with SUPIR or UltraSharp in ComfyUI"
         )
     if next_to_generate:
-        recommendations.append("🎯 À générer ensuite pour compléter le dataset :")
+        recommendations.append("🎯 Generate next to complete the dataset:")
         for s in next_to_generate:
             recommendations.append(f"   → {s}")
 
@@ -2017,7 +2017,7 @@ def analyze(folder, mode="full", ref_image=None, captioner_mode="none",
 
     save_cache(folder, cache_new)
     if n_from_cache > 0:
-        print(f"STEP Cache mis a jour ({len(cache_new['entries'])} entrees)", file=sys.stderr, flush=True)
+        print(f"STEP Cache updated ({len(cache_new['entries'])} entries)", file=sys.stderr, flush=True)
 
     return {
         "summary": summary,

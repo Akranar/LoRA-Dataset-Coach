@@ -1,23 +1,24 @@
 """
-Pilotage d'un ComfyUI LOCAL via son API HTTP pour generer le jeu de test
-de l'evaluateur LoRA (bibliotheque standard uniquement, pas de dependance).
+Drives a LOCAL ComfyUI instance via its HTTP API to generate the LoRA
+evaluator's test set (standard library only, no extra dependency).
 
-Principe :
-  1. L'utilisateur exporte SON workflow depuis ComfyUI en "Save (API Format)".
-     On ne fournit pas de graphe par modele : FLUX.2, Qwen-Image, Wan 2.2...
-     ont chacun leur graphe, celui de l'utilisateur est le seul qui marche
-     sur sa machine.
-  2. On patche ce workflow pour chaque image : prompt, seed, LoRA + force,
-     prefixe de sortie.
-  3. On genere N images AVEC le LoRA et (option) les memes seeds SANS le LoRA
-     (force 0) -> baseline A/B : le gain d'identite du LoRA devient mesurable.
+How it works:
+  1. The user exports THEIR workflow from ComfyUI as "Save (API Format)".
+     We don't ship a per-model graph: FLUX.2, Qwen-Image, Wan 2.2... each
+     have their own graph, and the user's own is the only one guaranteed
+     to work on their machine.
+  2. This workflow is patched for each image: prompt, seed, LoRA + strength,
+     output prefix.
+  3. N images are generated WITH the LoRA and (optionally) the same seeds
+     WITHOUT the LoRA (strength 0) -> A/B baseline: the LoRA's identity
+     gain becomes measurable.
 
-Routes utilisees (ComfyUI server.py) :
+Routes used (ComfyUI server.py):
   GET  /system_stats        ping
-  GET  /models/loras        liste des LoRA installes
-  POST /prompt              met un workflow en file -> prompt_id
-  GET  /history/{id}        etat + fichiers produits
-  GET  /view                telecharge une image produite
+  GET  /models/loras        list of installed LoRAs
+  POST /prompt              queues a workflow -> prompt_id
+  GET  /history/{id}        status + produced files
+  GET  /view                downloads a produced image
 """
 import copy
 import json
@@ -91,9 +92,9 @@ def queue_prompt(base_url, workflow, client_id):
     except urllib.error.HTTPError as e:
         # ComfyUI renvoie 400 + node_errors si le graphe est invalide
         detail = e.read().decode("utf-8", "replace")[:800]
-        raise ComfyUIError(f"ComfyUI a refuse le workflow (HTTP {e.code}) : {detail}")
+        raise ComfyUIError(f"ComfyUI rejected the workflow (HTTP {e.code}): {detail}")
     if data.get("node_errors"):
-        raise ComfyUIError(f"Erreurs de nodes : {json.dumps(data['node_errors'])[:800]}")
+        raise ComfyUIError(f"Node errors: {json.dumps(data['node_errors'])[:800]}")
     return data["prompt_id"]
 
 
@@ -107,11 +108,11 @@ def wait_for(base_url, prompt_id, timeout=1800, poll=1.0):
             status = entry.get("status", {})
             if status.get("status_str") == "error":
                 msgs = [m for m in status.get("messages", []) if m and m[0] == "execution_error"]
-                raise ComfyUIError(f"Execution ComfyUI en erreur : {json.dumps(msgs)[:800]}")
+                raise ComfyUIError(f"ComfyUI execution error: {json.dumps(msgs)[:800]}")
             if status.get("completed", True):
                 return entry
         time.sleep(poll)
-    raise ComfyUIError(f"Timeout : prompt {prompt_id} non termine apres {timeout}s")
+    raise ComfyUIError(f"Timeout: prompt {prompt_id} not finished after {timeout}s")
 
 
 def download_outputs(base_url, entry, dest_folder, stem):
@@ -141,11 +142,11 @@ def load_api_workflow(path):
     wf = json.loads(Path(path).read_text(encoding="utf-8"))
     if "nodes" in wf and "links" in wf:
         raise ComfyUIError(
-            "Ce fichier est un workflow format UI. Dans ComfyUI : menu Workflow > "
-            "Export (API) / 'Save (API Format)', puis donne ce fichier-la.")
+            "This file is a UI-format workflow. In ComfyUI: Workflow menu > "
+            "Export (API) / 'Save (API Format)', then use that file instead.")
     if not isinstance(wf, dict) or not all(isinstance(v, dict) and "class_type" in v
                                            for v in wf.values()):
-        raise ComfyUIError("JSON non reconnu comme workflow ComfyUI format API.")
+        raise ComfyUIError("JSON not recognized as a ComfyUI API-format workflow.")
     return wf
 
 
@@ -178,7 +179,7 @@ def _find_positive_text_node(wf):
 
 
 def inspect_workflow(wf):
-    """Resume ce qu'on sait patcher - affiche a l'utilisateur AVANT de lancer."""
+    """Summarizes what can be patched - shown to the user BEFORE running."""
     text_node, text_key = _find_positive_text_node(wf)
     # Seed "en dur" (int) seulement : une seed reliee a un autre node (liste) n'est pas touchee
     seeds = [nid for nid, n in wf.items()
@@ -186,13 +187,13 @@ def inspect_workflow(wf):
     saves = [nid for nid, n in wf.items() if n["class_type"] in SAVE_NODE_HINTS]
     problems = []
     if not _lora_nodes(wf):
-        problems.append("aucun node LoRA (LoraLoader / LoraLoaderModelOnly) dans le workflow")
+        problems.append("no LoRA node (LoraLoader / LoraLoaderModelOnly) in the workflow")
     if not text_node:
-        problems.append("prompt positif introuvable : mets {prompt} dans ton texte positif")
+        problems.append("positive prompt not found: put {prompt} in your positive text")
     if not saves:
-        problems.append("aucun node SaveImage : les images ne seraient pas recuperables")
+        problems.append("no SaveImage node: the images wouldn't be retrievable")
     if not seeds:
-        problems.append("aucune seed modifiable : toutes les images seraient identiques")
+        problems.append("no editable seed: all images would be identical")
     return {"lora_nodes": _lora_nodes(wf), "text_node": text_node, "text_key": text_key,
             "seed_nodes": seeds, "save_nodes": saves, "problems": problems}
 
@@ -201,7 +202,7 @@ def patch_workflow(wf, prompt, seed, lora_name, strength, prefix):
     wf = copy.deepcopy(wf)
     info = inspect_workflow(wf)
     if info["problems"]:
-        raise ComfyUIError("Workflow inutilisable : " + " ; ".join(info["problems"]))
+        raise ComfyUIError("Unusable workflow: " + " ; ".join(info["problems"]))
     node = wf[info["text_node"]]["inputs"]
     cur = node[info["text_key"]]
     node[info["text_key"]] = cur.replace("{prompt}", prompt) if "{prompt}" in cur else prompt
@@ -252,7 +253,7 @@ def _run_jobs(wf, jobs, base_url, progress_cb, stop_flag):
     fails_in_a_row = 0
     for k, (kind, key, i, p, seed, lora, s, dest) in enumerate(jobs, 1):
         if stop_flag and stop_flag():
-            res["errors"].append("arrete par l'utilisateur")
+            res["errors"].append("stopped by the user")
             break
         stem = f"{kind}_{i:03d}_s{seed}"
         if progress_cb:
@@ -263,7 +264,7 @@ def _run_jobs(wf, jobs, base_url, progress_cb, stop_flag):
                                client_id)
             files = download_outputs(base_url, wait_for(base_url, pid), dest, stem)
             if not files:
-                res["errors"].append(f"{key}/{stem}: aucune image produite")
+                res["errors"].append(f"{key}/{stem}: no image produced")
             res["files"].setdefault(key, []).extend(str(f) for f in files)
             res["prompts"][stem] = p
             fails_in_a_row = 0
@@ -272,20 +273,20 @@ def _run_jobs(wf, jobs, base_url, progress_cb, stop_flag):
             fails_in_a_row += 1
             # Workflow casse = inutile de relancer 200 fois la meme erreur
             if fails_in_a_row >= 3:
-                res["errors"].append("3 echecs d'affilee : arret")
+                res["errors"].append("3 failures in a row: stopping")
                 break
     return res
 
 
 def _prepare(workflow_path, lora_names, base_url):
     if not ping(base_url):
-        raise ComfyUIError(f"ComfyUI ne repond pas sur {base_url}. Lance-le d'abord.")
+        raise ComfyUIError(f"ComfyUI is not responding on {base_url}. Start it first.")
     wf = load_api_workflow(workflow_path)
     installed = list_loras(base_url)
     missing = [l for l in lora_names if l not in installed]
     if missing:
-        raise ComfyUIError(f"LoRA absent(s) de ComfyUI/models/loras : {', '.join(missing)} "
-                           f"({len(installed)} LoRA installes).")
+        raise ComfyUIError(f"LoRA(s) missing from ComfyUI/models/loras: {', '.join(missing)} "
+                           f"({len(installed)} LoRA(s) installed).")
     return wf
 
 
@@ -302,7 +303,7 @@ def generate_batch(workflow_path, lora_names, trigger, out_folder,
     """
     lora_names = list(lora_names)
     if not lora_names:
-        raise ComfyUIError("Aucun LoRA a tester.")
+        raise ComfyUIError("No LoRA to test.")
     wf = _prepare(workflow_path, lora_names, base_url)
     prompts = prompts or DEFAULT_TEST_PROMPTS
     out_folder = Path(out_folder)
@@ -396,7 +397,7 @@ def generate_compare(workflow_path, lora_names, prompt, seed, out_folder,
     """
     lora_names = list(lora_names)
     if not lora_names:
-        raise ComfyUIError("Aucun LoRA selectionne.")
+        raise ComfyUIError("No LoRA selected.")
     wf = _prepare(workflow_path, lora_names, base_url)
     out_folder = Path(out_folder)
     out_folder.mkdir(parents=True, exist_ok=True)

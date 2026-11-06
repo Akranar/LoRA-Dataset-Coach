@@ -54,7 +54,7 @@ class JoyCaptioner:
             import torch
             from transformers import AutoProcessor, LlavaForConditionalGeneration
         except Exception as e:
-            raise RuntimeError(f"transformers/torch manquant : {e}")
+            raise RuntimeError(f"Missing transformers/torch: {e}")
 
         self.mode = mode
         self.prompt = CAPTION_PROMPTS.get(mode, CAPTION_PROMPTS["descriptive_caption"])
@@ -73,12 +73,12 @@ class JoyCaptioner:
                 import bitsandbytes  # noqa: F401
                 can_int4 = True
             except Exception:
-                print("STEP bitsandbytes absent → JoyCaption en BF16 (~8 Go VRAM) "
-                      "au lieu d'INT4. Pour activer l'INT4 : pip install bitsandbytes",
+                print("STEP bitsandbytes not installed → JoyCaption in BF16 (~8 GB VRAM) "
+                      "instead of INT4. To enable INT4: pip install bitsandbytes",
                       file=sys.stderr, flush=True)
 
-        print(f"STEP Chargement JoyCaption Beta One ({device}, "
-              f"{'~4 Go INT4' if can_int4 else '~8 Go BF16'}, 1er run ~plusieurs minutes)...",
+        print(f"STEP Loading JoyCaption Beta One ({device}, "
+              f"{'~4 GB INT4' if can_int4 else '~8 GB BF16'}, first run ~a few minutes)...",
               file=sys.stderr, flush=True)
 
         # Chargement du processeur (image + tokenizer + chat template)
@@ -101,7 +101,7 @@ class JoyCaptioner:
             )
         except Exception as e:
             if "quantization_config" in load_kwargs:
-                print(f"STEP INT4 a échoué ({str(e)[:80]}) → repli BF16…",
+                print(f"STEP INT4 failed ({str(e)[:80]}) → falling back to BF16…",
                       file=sys.stderr, flush=True)
                 load_kwargs.pop("quantization_config", None)
                 self.model = LlavaForConditionalGeneration.from_pretrained(
